@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { App as AntApp } from "antd";
 import Login from "./pages/auth/Login";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import ProtectedRoute from "./components/share/ProtectedRoute";
@@ -15,7 +16,7 @@ import UnauthorizedPage from "./pages/unauthorized";
 
 function App() {
   return (
-    <>
+    <AntApp>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
@@ -87,7 +88,7 @@ function App() {
           />
         </Route>
       </Routes>
-    </>
+    </AntApp>
   );
 }
 

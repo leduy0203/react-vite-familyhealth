@@ -77,7 +77,6 @@ export const api = {
           "view_family",
           "create_record",
           "transfer_record",
-          "view_appointments",
         ],
       };
       token = "mock-token-user";

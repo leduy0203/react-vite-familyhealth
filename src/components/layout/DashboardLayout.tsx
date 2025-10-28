@@ -5,7 +5,14 @@ import {
   MenuUnfoldOutlined,
   UserOutlined,
   LogoutOutlined,
+  DashboardOutlined,
+  SolutionOutlined,
+  TeamOutlined,
+  ScheduleOutlined,
+  HomeOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
+import { FaStethoscope, FaHeartbeat } from "react-icons/fa";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setLogoutAction } from "../../redux/slice/accountSlice";
@@ -57,22 +64,35 @@ const DashboardLayout: React.FC = () => {
         collapsed={collapsed}
         onCollapse={(v) => setCollapsed(v)}
         theme="light"
+        width={280}
       >
         <div
           className="logo"
-          style={{ padding: 16, textAlign: "center", fontWeight: 700 }}
+          style={{
+            padding: "24px 16px 20px 16px",
+            textAlign: "center",
+            fontWeight: 700,
+            fontSize: 24,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+          }}
         >
-          {!collapsed ? "FamilyHealth" : "FH"}
+          <FaHeartbeat style={{ color: "#ff4d4f", fontSize: 28 }} />
+          {!collapsed && "FamilyHealth"}
         </div>
         <Menu
           theme="light"
           mode="inline"
           selectedKeys={selectedKey}
+          style={{ fontSize: 17 }}
           items={[
             ...(hasPermission(user, "view_dashboard")
               ? [
                   {
                     key: "1",
+                    icon: React.createElement(DashboardOutlined),
                     label: React.createElement(Link, { to: "/" }, "Dashboard"),
                   },
                 ]
@@ -81,6 +101,7 @@ const DashboardLayout: React.FC = () => {
               ? [
                   {
                     key: "2",
+                    icon: React.createElement(SolutionOutlined),
                     label: React.createElement(
                       Link,
                       { to: "/records" },
@@ -93,6 +114,7 @@ const DashboardLayout: React.FC = () => {
               ? [
                   {
                     key: "3",
+                    icon: React.createElement(TeamOutlined),
                     label: React.createElement(
                       Link,
                       { to: "/patients" },
@@ -105,6 +127,7 @@ const DashboardLayout: React.FC = () => {
               ? [
                   {
                     key: "4",
+                    icon: React.createElement(ScheduleOutlined),
                     label: React.createElement(
                       Link,
                       { to: "/appointments" },
@@ -118,6 +141,7 @@ const DashboardLayout: React.FC = () => {
               ? [
                   {
                     key: "5",
+                    icon: React.createElement(HomeOutlined),
                     label: React.createElement(
                       Link,
                       { to: "/family" },
@@ -130,6 +154,7 @@ const DashboardLayout: React.FC = () => {
               ? [
                   {
                     key: "6",
+                    icon: React.createElement(FileTextOutlined),
                     label: React.createElement(
                       Link,
                       { to: "/prescriptions" },
@@ -142,6 +167,7 @@ const DashboardLayout: React.FC = () => {
               ? [
                   {
                     key: "7",
+                    icon: React.createElement(FaStethoscope),
                     label: React.createElement(
                       Link,
                       { to: "/doctor/appointments" },
@@ -156,7 +182,8 @@ const DashboardLayout: React.FC = () => {
       <Layout>
         <Header
           style={{
-            padding: "0 16px",
+            height: 80,
+            padding: "0 24px",
             background: "#fff",
             display: "flex",
             justifyContent: "space-between",
@@ -179,7 +206,8 @@ const DashboardLayout: React.FC = () => {
               <span>Xin chào, {user?.name || "Khách"}</span>
               <Dropdown menu={{ items: menu }} placement="bottomRight">
                 <Avatar
-                  style={{ backgroundColor: "#87d068" }}
+                  size={40}
+                  style={{ backgroundColor: "#87d068", cursor: "pointer" }}
                   icon={<UserOutlined />}
                 />
               </Dropdown>

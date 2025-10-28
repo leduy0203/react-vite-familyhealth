@@ -14,6 +14,20 @@
   border-right: 1px solid rgba(0, 0, 0, 0.04);
 }
 
+/* Center menu items in sidebar */
+.ant-menu-item {
+  display: flex;
+  align-items: center;
+  padding-left: 25px !important;
+  padding-right: 24px !important;
+  height: 48px;
+  line-height: 48px;
+}
+
+.ant-menu-item .ant-menu-item-icon {
+  font-size: 18px;
+}
+
 .ant-layout-header {
   background: #fff;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
