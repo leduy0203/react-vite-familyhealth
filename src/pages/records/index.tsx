@@ -8,6 +8,7 @@ import {
 } from "../../redux/slice/recordSlice";
 import RecordForm from "../../components/records/RecordForm";
 import type { IMedicalRecord } from "../../types/health";
+import Access from "../../components/share/Access";
 
 const RecordsPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -107,9 +108,11 @@ const RecordsPage: React.FC = () => {
         }}
       >
         <h2>Danh sách hồ sơ</h2>
-        <Button type="primary" onClick={handleAdd}>
-          Tạo hồ sơ
-        </Button>
+        <Access permission="create_record" hideChildren>
+          <Button type="primary" onClick={handleAdd}>
+            Tạo hồ sơ
+          </Button>
+        </Access>
       </div>
       <Table
         rowKey="id"

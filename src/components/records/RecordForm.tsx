@@ -1,11 +1,13 @@
 import React, { useEffect } from "react";
-import { Modal, Form, Input } from "antd";
+import { Modal, Form } from "antd";
+import RecordDetailsSubForm from "./form/RecordDetailsSubForm";
+import RecordStatusSubForm from "./form/RecordStatusSubForm";
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  initialValues?: { id?: string; name?: string; owner?: string } | null;
-  onSave: (values: { id?: string; name: string; owner: string }) => void;
+  initialValues?: any;
+  onSave: (values: any) => void;
 }
 
 const RecordForm: React.FC<Props> = ({
@@ -18,14 +20,19 @@ const RecordForm: React.FC<Props> = ({
 
   useEffect(() => {
     if (visible) {
-      form.setFieldsValue(initialValues || { name: "", owner: "" });
+      form.setFieldsValue(
+        initialValues || { patientName: "", summary: "", status: "pending" }
+      );
     }
-  }, [visible, initialValues]);
+  }, [visible, initialValues, form]);
 
   const handleOk = async () => {
-    const values = await form.validateFields();
-    onSave({ ...initialValues, ...values });
-    onClose();
+    try {
+      const values = await form.validateFields();
+      onSave({ ...initialValues, ...values });
+    } catch (info) {
+      console.log("Validate Failed:", info);
+    }
   };
 
   return (
@@ -35,28 +42,11 @@ const RecordForm: React.FC<Props> = ({
       onOk={handleOk}
       onCancel={onClose}
       destroyOnClose
+      width={600}
     >
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={initialValues || { name: "", owner: "" }}
-      >
-        <Form.Item
-          label="Tên hồ sơ"
-          name="name"
-          rules={[{ required: true, message: "Tên hồ sơ không được để trống" }]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label="Chủ sở hữu"
-          name="owner"
-          rules={[
-            { required: true, message: "Chủ sở hữu không được để trống" },
-          ]}
-        >
-          <Input />
-        </Form.Item>
+      <Form form={form} layout="vertical">
+        <RecordDetailsSubForm />
+        <RecordStatusSubForm />
       </Form>
     </Modal>
   );

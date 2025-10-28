@@ -11,12 +11,14 @@ import AppointmentsPage from "./pages/appointments";
 import FamilyPage from "./pages/family";
 import PrescriptionsPage from "./pages/prescriptions";
 import DoctorAppointments from "./pages/doctor/appointments";
+import UnauthorizedPage from "./pages/unauthorized";
 
 function App() {
   return (
     <>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
         <Route
           path="/"
