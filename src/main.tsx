@@ -4,6 +4,8 @@ import App from "./App.tsx";
 import { Provider } from "react-redux";
 import { store } from "./redux/store.ts";
 import { BrowserRouter } from "react-router-dom";
+import "./styles/global.scss";
+import { initAuth } from "./config/initAuth";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -14,3 +16,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     </Provider>
   </React.StrictMode>
 );
+
+// try to restore session from token (non-blocking)
+initAuth();

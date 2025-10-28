@@ -10,6 +10,8 @@ interface IUser {
     id: string;
     name: string;
   };
+  // permissions: list of permission keys allowed for this user
+  permissions?: string[];
 }
 
 // Define a type for the slice state
@@ -26,6 +28,7 @@ const initialState: IAccountState = {
     email: "",
     name: "",
     role: { id: "", name: "" },
+    permissions: [],
   },
 };
 

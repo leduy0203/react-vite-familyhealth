@@ -1,9 +1,19 @@
 import { configureStore } from "@reduxjs/toolkit";
 import accountReducer from "./slice/accountSlice";
+import profileReducer from "./slice/profileSlice";
+import familyReducer from "./slice/familySlice";
+import appointmentReducer from "./slice/appointmentSlice";
+import prescriptionReducer from "./slice/prescriptionSlice";
+import recordReducer from "./slice/recordSlice";
 
 export const store = configureStore({
   reducer: {
     account: accountReducer,
+    profile: profileReducer,
+    family: familyReducer,
+    appointment: appointmentReducer,
+    prescription: prescriptionReducer,
+    record: recordReducer,
   },
 });
 
