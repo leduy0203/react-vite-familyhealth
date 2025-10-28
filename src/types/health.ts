@@ -23,13 +23,17 @@ export interface IFamilyMember {
 
 export interface IAppointment {
   id: string;
-  facility: string;
-  doctor?: string;
-  datetime: string; // ISO
-  patientName?: string;
-  reason?: string;
-  status: "pending" | "confirmed" | "done" | "cancelled";
-  note?: string;
+  recordId?: string; // ID hồ sơ bệnh án
+  doctorId: string; // ID bác sĩ
+  doctorName?: string; // Tên bác sĩ (từ API)
+  patientId: string; // ID bệnh nhân
+  patientName?: string; // Tên bệnh nhân (từ API)
+  appointmentDate: string; // Ngày giờ hẹn (ISO format)
+  location: string; // Địa điểm khám
+  status: "pending" | "confirmed" | "completed" | "cancelled"; // Trạng thái
+  note?: string; // Ghi chú
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface IPrescription {

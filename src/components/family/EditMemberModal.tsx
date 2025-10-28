@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Modal, Form, Input, DatePicker, Select, Space, App } from "antd";
+import { Modal, Form, Input, DatePicker, Select, Space, App, Tag } from "antd";
 import { EditOutlined, UserOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import type { IFamilyMember } from "../../types/health";
@@ -111,7 +111,41 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
           </Form.Item>
 
           <Form.Item label="Tình trạng sức khỏe" name="healthStatus">
-            <Input placeholder="Ví dụ: Khỏe mạnh, Đang điều trị..." />
+            <Select
+              placeholder="-- Chọn tình trạng --"
+              optionRender={(option) => option.data.label}
+            >
+              <Select.Option
+                value="Khỏe mạnh"
+                label={<Tag color="green">Khỏe mạnh</Tag>}
+              >
+                <Tag color="green">Khỏe mạnh</Tag>
+              </Select.Option>
+              <Select.Option
+                value="Bình thường"
+                label={<Tag color="cyan">Bình thường</Tag>}
+              >
+                <Tag color="cyan">Bình thường</Tag>
+              </Select.Option>
+              <Select.Option
+                value="Đang điều trị"
+                label={<Tag color="orange">Đang điều trị</Tag>}
+              >
+                <Tag color="orange">Đang điều trị</Tag>
+              </Select.Option>
+              <Select.Option
+                value="Cần theo dõi"
+                label={<Tag color="gold">Cần theo dõi</Tag>}
+              >
+                <Tag color="gold">Cần theo dõi</Tag>
+              </Select.Option>
+              <Select.Option
+                value="Nghiêm trọng"
+                label={<Tag color="red">Nghiêm trọng</Tag>}
+              >
+                <Tag color="red">Nghiêm trọng</Tag>
+              </Select.Option>
+            </Select>
           </Form.Item>
 
           <Form.Item label="Ghi chú" name="notes">

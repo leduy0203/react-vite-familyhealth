@@ -15,6 +15,7 @@ import {
   Row,
   Col,
   Popconfirm,
+  Tag,
 } from "antd";
 import {
   PlusOutlined,
@@ -25,7 +26,6 @@ import {
   TeamOutlined,
   UserOutlined,
   SearchOutlined,
-  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { fetchFamily } from "../../redux/slice/familySlice";
@@ -36,7 +36,7 @@ import EditMemberModal from "../../components/family/EditMemberModal";
 const { Title, Text } = Typography;
 
 const FamilyPage: React.FC = () => {
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
   const dispatch = useAppDispatch();
   const { members, loading } = useAppSelector((s) => s.family);
 
@@ -95,6 +95,19 @@ const FamilyPage: React.FC = () => {
     );
   });
 
+  const getHealthStatusTag = (status?: string) => {
+    const statusConfig: Record<string, { color: string; text: string }> = {
+      "Khỏe mạnh": { color: "green", text: "Khỏe mạnh" },
+      "Bình thường": { color: "cyan", text: "Bình thường" },
+      "Đang điều trị": { color: "orange", text: "Đang điều trị" },
+      "Cần theo dõi": { color: "gold", text: "Cần theo dõi" },
+      "Nghiêm trọng": { color: "red", text: "Nghiêm trọng" },
+    };
+    if (!status) return <Tag color="default">Chưa có thông tin</Tag>;
+    const config = statusConfig[status] || { color: "blue", text: status };
+    return <Tag color={config.color}>{config.text}</Tag>;
+  };
+
   const columns = [
     {
       title: "Họ và tên",
@@ -127,10 +140,7 @@ const FamilyPage: React.FC = () => {
       title: "Tình trạng sức khỏe",
       dataIndex: "healthStatus",
       key: "healthStatus",
-      ellipsis: true,
-      render: (text: string) => (
-        <Text style={{ color: "#595959" }}>{text || "Chưa có thông tin"}</Text>
-      ),
+      render: (status: string) => getHealthStatusTag(status),
     },
     {
       title: "Hành động",
@@ -172,44 +182,26 @@ const FamilyPage: React.FC = () => {
     },
   ];
 
-  // --- Style Objects (Giúp JSX gọn hơn) ---
-  const cardStyle: React.CSSProperties = {
-    marginBottom: 16,
-    borderRadius: "8px",
-    boxShadow:
-      "0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02)",
-  };
-
-  const breadcrumbCardStyle: React.CSSProperties = {
-    ...cardStyle,
-    // Hơi khác một chút
-    boxShadow:
-      "0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02)",
-  };
-
-  const tableCardStyle: React.CSSProperties = {
-    ...cardStyle,
-    boxShadow:
-      "0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)",
-  };
-  // ----------------------------------------
-
   return (
     <div>
       {/* Breadcrumb Card */}
       <Card
         variant="borderless"
-        style={cardStyle}
+        style={{
+          marginBottom: 16,
+          borderRadius: "8px",
+          boxShadow:
+            "0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02)",
+        }}
         styles={{ body: { padding: "12px 24px" } }}
       >
         <Breadcrumb
-          style={{ fontSize: "15px" }}
           items={[
             {
               href: "/",
               title: (
                 <Space>
-                  <HomeOutlined style={{ fontSize: "16px" }} />
+                  <HomeOutlined />
                   <span>Trang chủ</span>
                 </Space>
               ),
@@ -217,7 +209,7 @@ const FamilyPage: React.FC = () => {
             {
               title: (
                 <Space>
-                  <TeamOutlined style={{ fontSize: "16px" }} />
+                  <TeamOutlined />
                   <span>Thành viên gia đình</span>
                 </Space>
               ),
@@ -254,10 +246,7 @@ const FamilyPage: React.FC = () => {
                   { min: 2, message: "Tên phải có ít nhất 2 ký tự" },
                 ]}
               >
-                <Input
-                  placeholder="Nhập họ và tên"
-                  prefix={<UserOutlined style={{ color: "#bfbfbf" }} />}
-                />
+                <Input placeholder="Nhập họ và tên" prefix={<UserOutlined />} />
               </Form.Item>
             </Col>
 
@@ -291,18 +280,31 @@ const FamilyPage: React.FC = () => {
 
             <Col xs={24} sm={12} md={6}>
               <Form.Item label="Tình trạng sức khỏe" name="healthStatus">
-                <Input placeholder="Ví dụ: Khỏe mạnh, Đang điều trị..." />
+                <Select placeholder="-- Chọn tình trạng --">
+                  <Select.Option value="Khỏe mạnh">Khỏe mạnh</Select.Option>
+                  <Select.Option value="Bình thường">Bình thường</Select.Option>
+                  <Select.Option value="Đang điều trị">
+                    Đang điều trị
+                  </Select.Option>
+                  <Select.Option value="Cần theo dõi">
+                    Cần theo dõi
+                  </Select.Option>
+                  <Select.Option value="Nghiêm trọng">
+                    Nghiêm trọng
+                  </Select.Option>
+                </Select>
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item>
+          <Form.Item
+            style={{ marginTop: 24, marginBottom: 0, textAlign: "right" }}
+          >
             <Button
               type="primary"
               icon={<PlusOutlined />}
               onClick={handleAdd}
               size="middle"
-              style={{ borderRadius: "6px" }}
             >
               Thêm thành viên
             </Button>
@@ -320,25 +322,30 @@ const FamilyPage: React.FC = () => {
             "0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)",
         }}
       >
-        <div style={{ marginBottom: 16 }}>
-          <Space align="center" style={{ marginBottom: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
+          <Space align="center">
             <TeamOutlined style={{ fontSize: "24px", color: "#1890ff" }} />
             <Title level={5} style={{ margin: 0 }}>
               Danh sách thành viên
             </Title>
           </Space>
-        </div>
 
-        {/* Search - Moved below title */}
-        <Input
-          placeholder="Tìm kiếm theo tên, quan hệ, tình trạng sức khỏe..."
-          prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          allowClear
-          size="large"
-          style={{ maxWidth: 400, marginBottom: 16 }}
-        />
+          <Input
+            placeholder="Tìm kiếm theo tên, quan hệ, tình trạng sức khỏe..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+            style={{ maxWidth: 400 }}
+          />
+        </div>
 
         <Table
           rowKey="id"
@@ -352,7 +359,7 @@ const FamilyPage: React.FC = () => {
           }}
           locale={{
             emptyText: (
-              <div style={{ padding: "40px 0" }}>
+              <div style={{ padding: "40px 0", textAlign: "center" }}>
                 <TeamOutlined style={{ fontSize: "48px", color: "#d9d9d9" }} />
                 <div style={{ marginTop: "16px", color: "#8c8c8c" }}>
                   Chưa có thành viên nào

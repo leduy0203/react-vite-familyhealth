@@ -58,13 +58,23 @@ const DashboardLayout: React.FC = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout
+      style={{ minHeight: "100vh", maxHeight: "100vh", overflow: "hidden" }}
+    >
       <Sider
         collapsible
         collapsed={collapsed}
         onCollapse={(v) => setCollapsed(v)}
         theme="light"
         width={280}
+        style={{
+          overflow: "auto",
+          height: "100vh",
+          position: "fixed",
+          left: 0,
+          top: 0,
+          bottom: 0,
+        }}
       >
         <div
           className="logo"
@@ -163,7 +173,7 @@ const DashboardLayout: React.FC = () => {
                   },
                 ]
               : []),
-            ...(hasPermission(user, "view_appointments")
+            ...(hasPermission(user, "view_doctor_appointments")
               ? [
                   {
                     key: "7",
@@ -179,7 +189,12 @@ const DashboardLayout: React.FC = () => {
           ]}
         />
       </Sider>
-      <Layout>
+      <Layout
+        style={{
+          marginLeft: collapsed ? 80 : 280,
+          transition: "margin-left 0.2s",
+        }}
+      >
         <Header
           style={{
             height: 80,
@@ -188,6 +203,13 @@ const DashboardLayout: React.FC = () => {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            position: "fixed",
+            top: 0,
+            right: 0,
+            left: collapsed ? 80 : 280,
+            zIndex: 1,
+            transition: "left 0.2s",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
           }}
         >
           <div>
@@ -214,7 +236,16 @@ const DashboardLayout: React.FC = () => {
             </Space>
           </div>
         </Header>
-        <Content style={{ margin: 16 }}>
+        <Content
+          style={{
+            marginTop: 80,
+            padding: "15px",
+            minHeight: "calc(100vh - 80px)",
+            maxHeight: "calc(100vh - 80px)",
+            overflow: "auto",
+            background: "#f0f2f5",
+          }}
+        >
           <Outlet />
         </Content>
       </Layout>
