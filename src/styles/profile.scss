@@ -1,0 +1,88 @@
+.profile-page {
+  padding: 0;
+
+  .breadcrumb-card {
+    margin-bottom: 16px;
+  }
+
+  // Avatar Section
+  .avatar-section {
+    text-align: center;
+
+    .avatar-wrapper {
+      position: relative;
+      display: inline-block;
+
+      .user-avatar {
+        background-color: #1890ff;
+        cursor: pointer;
+        border: 4px solid #f0f0f0;
+      }
+
+      .camera-button {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: #1890ff;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 3px solid white;
+
+        .camera-icon {
+          color: white;
+          font-size: 16px;
+        }
+      }
+    }
+
+    .user-info {
+      margin-top: 16px;
+
+      .user-name {
+        margin-bottom: 4px;
+      }
+
+      .user-role {
+        margin-top: 8px;
+      }
+    }
+  }
+
+  // Account Info Section
+  .account-info-section {
+    .section-title {
+      font-size: 16px;
+    }
+
+    .info-list {
+      margin-top: 16px;
+
+      .info-item {
+        margin-bottom: 12px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .info-label {
+          font-size: 12px;
+          display: block;
+          margin-bottom: 4px;
+        }
+      }
+    }
+  }
+
+  // Form Section
+  .profile-form-card {
+    .form-actions {
+      margin-top: 24px;
+      margin-bottom: 0;
+    }
+  }
+}
