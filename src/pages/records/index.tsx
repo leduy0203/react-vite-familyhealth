@@ -1,26 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Table,
-  Button,
-  Space,
-  Card,
-  Tag,
-  Typography,
-  Tooltip,
-  Breadcrumb,
-  Input,
   App,
+  Breadcrumb,
+  Button,
+  Card,
+  Input,
+  Space,
+  Table,
+  Tag,
+  Tooltip,
+  Typography,
 } from "antd";
 import {
-  PlusOutlined,
   EditOutlined,
-  SwapOutlined,
-  FileTextOutlined,
-  UserOutlined,
   EyeOutlined,
+  FileTextOutlined,
   HomeOutlined,
+  PlusOutlined,
   SearchOutlined,
+  SwapOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { fetchRecords, createRecord } from "../../redux/slice/recordSlice";
@@ -28,6 +28,7 @@ import RecordForm from "../../components/records/RecordForm";
 import TransferModal from "../../components/records/TransferModal";
 import type { IMedicalRecord } from "../../types/health";
 import Access from "../../components/share/Access";
+import "../../styles/records.scss";
 
 const { Title, Text } = Typography;
 
@@ -117,9 +118,11 @@ const RecordsPage: React.FC = () => {
       dataIndex: "patientName",
       key: "patientName",
       render: (text: string) => (
-        <Space>
-          <UserOutlined style={{ color: "#1890ff" }} />
-          <Text strong>{text}</Text>
+        <Space className="patient-cell">
+          <UserOutlined className="icon" />
+          <Text strong className="text">
+            {text}
+          </Text>
         </Space>
       ),
     },
@@ -129,7 +132,7 @@ const RecordsPage: React.FC = () => {
       key: "summary",
       ellipsis: true,
       render: (text: string) => (
-        <Text style={{ color: "#595959" }}>{text || "Chưa có thông tin"}</Text>
+        <Text className="summary-cell">{text || "Chưa có thông tin"}</Text>
       ),
     },
     {
@@ -175,26 +178,16 @@ const RecordsPage: React.FC = () => {
   ];
 
   return (
-    <div>
+    <div className="records-page">
       {/* Breadcrumb Card */}
-      <Card
-        variant="borderless"
-        style={{
-          marginBottom: 16,
-          borderRadius: "8px",
-          boxShadow:
-            "0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02)",
-        }}
-        styles={{ body: { padding: "12px 24px" } }}
-      >
+      <Card variant="borderless" className="breadcrumb-card">
         <Breadcrumb
-          style={{ fontSize: "18px" }}
           items={[
             {
               href: "/",
               title: (
                 <Space>
-                  <HomeOutlined style={{ fontSize: "16px" }} />
+                  <HomeOutlined className="icon" />
                   <span>Trang chủ</span>
                 </Space>
               ),
@@ -202,7 +195,7 @@ const RecordsPage: React.FC = () => {
             {
               title: (
                 <Space>
-                  <FileTextOutlined style={{ fontSize: "16px" }} />
+                  <FileTextOutlined className="icon" />
                   <span>Hồ sơ bệnh án</span>
                 </Space>
               ),
@@ -212,44 +205,24 @@ const RecordsPage: React.FC = () => {
       </Card>
 
       {/* Main Content Card */}
-      <Card
-        variant="borderless"
-        style={{
-          borderRadius: "8px",
-          boxShadow:
-            "0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)",
-        }}
-      >
+      <Card variant="borderless" className="content-card">
         {/* Header */}
-        <div
-          style={{
-            marginBottom: 16,
-          }}
-        >
-          <Space align="center" style={{ marginBottom: 20 }}>
-            <FileTextOutlined style={{ fontSize: "24px", color: "#1890ff" }} />
-            <Title level={5} style={{ margin: 0 }}>
-              Quản lý Hồ sơ
-            </Title>
+        <div className="page-header">
+          <Space align="center" className="header-title">
+            <FileTextOutlined className="icon" />
+            <Title level={5}>Quản lý Hồ sơ</Title>
           </Space>
 
           {/* Search and Create Button Row */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 11,
-            }}
-          >
+          <div className="search-actions">
             <Input
+              className="search-input"
               placeholder="Tìm kiếm theo tên bệnh nhân"
               prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear
               size="large"
-              style={{ maxWidth: 280 }}
             />
             <Access permission="create_record" hideChildren>
               <Button
@@ -257,7 +230,7 @@ const RecordsPage: React.FC = () => {
                 icon={<PlusOutlined />}
                 size="large"
                 onClick={handleAdd}
-                style={{ borderRadius: "6px", maxWidth: 160 }}
+                className="create-button"
               >
                 Tạo hồ sơ mới
               </Button>
@@ -266,6 +239,7 @@ const RecordsPage: React.FC = () => {
         </div>
 
         <Table
+          className="records-table"
           rowKey="id"
           loading={loading}
           dataSource={filteredList}
@@ -277,17 +251,12 @@ const RecordsPage: React.FC = () => {
           }}
           locale={{
             emptyText: (
-              <div style={{ padding: "40px 0" }}>
-                <FileTextOutlined
-                  style={{ fontSize: "48px", color: "#d9d9d9" }}
-                />
-                <div style={{ marginTop: "16px", color: "#8c8c8c" }}>
-                  Chưa có hồ sơ bệnh án nào
-                </div>
+              <div className="empty-state">
+                <FileTextOutlined className="icon" />
+                <div className="text">Chưa có hồ sơ bệnh án nào</div>
               </div>
             ),
           }}
-          style={{ marginTop: "16px" }}
         />
       </Card>
 

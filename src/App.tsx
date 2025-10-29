@@ -12,6 +12,8 @@ import AppointmentsPage from "./pages/appointments";
 import FamilyPage from "./pages/family";
 import PrescriptionsPage from "./pages/prescriptions";
 import DoctorAppointments from "./pages/doctor/appointments";
+import DoctorsPage from "./pages/doctors";
+import MedicalHistoryPage from "./pages/history";
 import UnauthorizedPage from "./pages/unauthorized";
 
 function App() {
@@ -83,6 +85,22 @@ function App() {
             element={
               <PermissionRoute permission="view_patients">
                 <PatientsPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="doctors"
+            element={
+              <PermissionRoute permission="view_doctors">
+                <DoctorsPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="history"
+            element={
+              <PermissionRoute permission="view_records">
+                <MedicalHistoryPage />
               </PermissionRoute>
             }
           />

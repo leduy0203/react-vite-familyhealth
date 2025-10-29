@@ -64,3 +64,39 @@ export interface IMedicalRecord {
   linkedAppointmentId?: string;
   linkedPrescriptionId?: string;
 }
+
+export interface IDoctor {
+  id: string;
+  name: string;
+  specialization: string;
+  hospital: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  rating: number;
+  experience: number; // years
+  available: boolean;
+  avatar?: string;
+  education?: string;
+  languages?: string[];
+}
+
+export interface IMedicalVisit {
+  id: string;
+  visitDate: string; // ISO date
+  doctorName: string;
+  doctorSpecialization: string;
+  hospital: string;
+  diagnosis: string; // Chẩn đoán
+  symptoms?: string[]; // Triệu chứng
+  treatment?: string; // Điều trị
+  prescriptionId?: string; // Link to prescription
+  labTests?: { name: string; result?: string }[]; // Xét nghiệm
+  followUpDate?: string; // Ngày tái khám
+  notes?: string;
+  cost?: number;
+  status: "completed" | "follow_up_needed" | "cancelled";
+  attachments?: { id: string; name: string; url?: string }[];
+  createdAt?: string;
+  updatedAt?: string;
+}

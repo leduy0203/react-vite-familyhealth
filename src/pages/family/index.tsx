@@ -1,37 +1,38 @@
 import React, { useEffect, useState } from "react";
 import {
-  Table,
-  Button,
-  Space,
-  Card,
-  Typography,
-  Tooltip,
-  Breadcrumb,
-  Input,
-  Form,
-  DatePicker,
-  Select,
   App,
-  Row,
+  Breadcrumb,
+  Button,
+  Card,
   Col,
+  DatePicker,
+  Form,
+  Input,
   Popconfirm,
+  Row,
+  Select,
+  Space,
+  Table,
   Tag,
+  Tooltip,
+  Typography,
 } from "antd";
 import {
-  PlusOutlined,
-  EditOutlined,
   DeleteOutlined,
+  EditOutlined,
   EyeOutlined,
   HomeOutlined,
+  PlusOutlined,
+  SearchOutlined,
   TeamOutlined,
   UserOutlined,
-  SearchOutlined,
 } from "@ant-design/icons";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { fetchFamily } from "../../redux/slice/familySlice";
 import type { IFamilyMember } from "../../types/health";
 import ViewMemberModal from "../../components/family/ViewMemberModal";
 import EditMemberModal from "../../components/family/EditMemberModal";
+import "../../styles/family.scss";
 
 const { Title, Text } = Typography;
 
@@ -114,9 +115,11 @@ const FamilyPage: React.FC = () => {
       dataIndex: "name",
       key: "name",
       render: (text: string) => (
-        <Space>
-          <UserOutlined style={{ color: "#1890ff" }} />
-          <Text strong>{text}</Text>
+        <Space className="name-cell">
+          <UserOutlined className="icon" />
+          <Text strong className="text">
+            {text}
+          </Text>
         </Space>
       ),
     },
@@ -125,7 +128,7 @@ const FamilyPage: React.FC = () => {
       dataIndex: "relation",
       key: "relation",
       render: (text: string) => (
-        <Text style={{ color: "#595959" }}>{text || "Chưa xác định"}</Text>
+        <Text className="relation-cell">{text || "Chưa xác định"}</Text>
       ),
     },
     {
@@ -183,18 +186,9 @@ const FamilyPage: React.FC = () => {
   ];
 
   return (
-    <div>
+    <div className="family-page">
       {/* Breadcrumb Card */}
-      <Card
-        variant="borderless"
-        style={{
-          marginBottom: 16,
-          borderRadius: "8px",
-          boxShadow:
-            "0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02)",
-        }}
-        styles={{ body: { padding: "12px 24px" } }}
-      >
+      <Card variant="borderless" className="breadcrumb-card">
         <Breadcrumb
           items={[
             {
@@ -219,20 +213,10 @@ const FamilyPage: React.FC = () => {
       </Card>
 
       {/* Form Card - Thêm thành viên */}
-      <Card
-        variant="borderless"
-        style={{
-          marginBottom: 16,
-          borderRadius: "8px",
-          boxShadow:
-            "0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02)",
-        }}
-      >
-        <Space align="center" style={{ marginBottom: 16 }}>
-          <UserOutlined style={{ fontSize: "24px", color: "#52c41a" }} />
-          <Title level={5} style={{ margin: 0 }}>
-            Thêm thành viên mới
-          </Title>
+      <Card variant="borderless" className="form-card">
+        <Space align="center" className="form-header">
+          <UserOutlined className="icon" />
+          <Title level={5}>Thêm thành viên mới</Title>
         </Space>
 
         <Form form={form} layout="vertical">
@@ -271,9 +255,9 @@ const FamilyPage: React.FC = () => {
             <Col xs={24} sm={12} md={6}>
               <Form.Item label="Ngày sinh" name="dob">
                 <DatePicker
-                  style={{ width: "100%" }}
                   placeholder="Chọn ngày sinh"
                   format="DD/MM/YYYY"
+                  className="date-picker-full"
                 />
               </Form.Item>
             </Col>
@@ -297,9 +281,7 @@ const FamilyPage: React.FC = () => {
             </Col>
           </Row>
 
-          <Form.Item
-            style={{ marginTop: 24, marginBottom: 0, textAlign: "right" }}
-          >
+          <Form.Item className="form-actions">
             <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -313,37 +295,20 @@ const FamilyPage: React.FC = () => {
       </Card>
 
       {/* Table Card - Danh sách */}
-      <Card
-        variant="borderless"
-        style={{
-          marginBottom: 16,
-          borderRadius: "8px",
-          boxShadow:
-            "0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 16,
-          }}
-        >
-          <Space align="center">
-            <TeamOutlined style={{ fontSize: "24px", color: "#1890ff" }} />
-            <Title level={5} style={{ margin: 0 }}>
-              Danh sách thành viên
-            </Title>
+      <Card variant="borderless" className="table-card">
+        <div className="table-header">
+          <Space align="center" className="header-title">
+            <TeamOutlined className="icon" />
+            <Title level={5}>Danh sách thành viên</Title>
           </Space>
 
           <Input
+            className="search-input"
             placeholder="Tìm kiếm theo tên, quan hệ, tình trạng sức khỏe..."
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
-            style={{ maxWidth: 400 }}
           />
         </div>
 
@@ -359,11 +324,9 @@ const FamilyPage: React.FC = () => {
           }}
           locale={{
             emptyText: (
-              <div style={{ padding: "40px 0", textAlign: "center" }}>
-                <TeamOutlined style={{ fontSize: "48px", color: "#d9d9d9" }} />
-                <div style={{ marginTop: "16px", color: "#8c8c8c" }}>
-                  Chưa có thành viên nào
-                </div>
+              <div className="empty-state">
+                <TeamOutlined className="icon" />
+                <div className="text">Chưa có thành viên nào</div>
               </div>
             ),
           }}

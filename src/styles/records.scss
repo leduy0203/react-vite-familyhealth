@@ -1,0 +1,99 @@
+.records-page {
+  // Breadcrumb Card
+  .breadcrumb-card {
+    margin-bottom: 16px;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03),
+      0 1px 6px -1px rgba(0, 0, 0, 0.02);
+
+    :global(.ant-card-body) {
+      padding: 12px 24px;
+    }
+
+    :global(.ant-breadcrumb) {
+      font-size: 18px;
+
+      .icon {
+        font-size: 16px;
+      }
+    }
+  }
+
+  // Main Content Card
+  .content-card {
+    border-radius: 8px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03),
+      0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+
+    // Header
+    .page-header {
+      margin-bottom: 16px;
+
+      .header-title {
+        margin-bottom: 20px;
+
+        .icon {
+          font-size: 24px;
+          color: #1890ff;
+        }
+
+        h5 {
+          margin: 0;
+        }
+      }
+
+      // Search and Action Row
+      .search-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 11px;
+
+        .search-input {
+          max-width: 280px;
+        }
+
+        .create-button {
+          border-radius: 6px;
+          max-width: 160px;
+        }
+      }
+    }
+
+    // Table
+    .records-table {
+      margin-top: 16px;
+
+      // Table column styles
+      .patient-cell {
+        .icon {
+          color: #1890ff;
+        }
+
+        .text {
+          font-weight: 500;
+        }
+      }
+
+      .summary-cell {
+        color: #595959;
+      }
+
+      // Empty state
+      .empty-state {
+        padding: 40px 0;
+        text-align: center;
+
+        .icon {
+          font-size: 48px;
+          color: #d9d9d9;
+        }
+
+        .text {
+          margin-top: 16px;
+          color: #8c8c8c;
+        }
+      }
+    }
+  }
+}

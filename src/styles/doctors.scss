@@ -1,0 +1,183 @@
+// Doctors Page Styles
+
+.doctors-page {
+  // Breadcrumb Card
+  .breadcrumb-card {
+    margin-bottom: 16px;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03),
+      0 1px 6px -1px rgba(0, 0, 0, 0.02);
+
+    .ant-card-body {
+      padding: 12px 24px;
+    }
+
+    .ant-breadcrumb {
+      font-size: 18px;
+    }
+  }
+
+  // Main Content Card
+  .content-card {
+    border-radius: 8px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03),
+      0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+  }
+
+  // Header Section
+  .page-header {
+    margin-bottom: 20px;
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 8px;
+
+      .icon {
+        font-size: 24px;
+        color: #1890ff;
+      }
+
+      h5 {
+        margin: 0;
+      }
+    }
+
+    .filters {
+      margin-bottom: 16px;
+
+      .search-input {
+        width: 350px;
+      }
+
+      .specialization-select {
+        width: 200px;
+      }
+    }
+  }
+
+  // Doctor Card
+  .doctor-card {
+    width: 100%;
+
+    .ant-card-body {
+      padding: 20px;
+    }
+
+    .doctor-content {
+      display: flex;
+      gap: 20px;
+
+      .doctor-avatar {
+        flex-shrink: 0;
+        background-color: #1890ff;
+      }
+
+      .doctor-info {
+        flex: 1;
+
+        .info-space {
+          width: 100%;
+        }
+
+        .doctor-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+
+          .doctor-name-rating {
+            h5 {
+              margin: 0 0 4px 0;
+            }
+
+            .rating-container {
+              display: flex;
+              align-items: center;
+              gap: 4px;
+
+              .ant-rate {
+                font-size: 14px;
+              }
+
+              .rating-text {
+                font-size: 13px;
+              }
+            }
+          }
+        }
+
+        .doctor-tags {
+          margin-top: 8px;
+        }
+
+        .doctor-contact {
+          margin-top: 8px;
+
+          .contact-item {
+            margin-bottom: 4px;
+            font-size: 13px;
+
+            .icon {
+              margin-right: 8px;
+
+              &.hospital-icon {
+                color: #1890ff;
+              }
+
+              &.address-icon {
+                opacity: 0.6;
+              }
+
+              &.phone-icon {
+                color: #52c41a;
+              }
+
+              &.email-icon {
+                color: #fa8c16;
+              }
+            }
+          }
+        }
+
+        .doctor-languages {
+          margin-top: 8px;
+
+          .languages-label {
+            font-size: 13px;
+          }
+
+          .ant-tag {
+            font-size: 12px;
+          }
+        }
+      }
+
+      .doctor-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 140px;
+
+        .book-button:not(:disabled) {
+          background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+          border-color: #1890ff;
+        }
+
+        button {
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  // List Item
+  .doctor-list-item {
+    padding: 16px 0;
+  }
+
+  // Pagination
+  .ant-pagination {
+    margin-top: 16px;
+  }
+}

@@ -11,6 +11,8 @@ import {
   ScheduleOutlined,
   HomeOutlined,
   FileTextOutlined,
+  MedicineBoxOutlined,
+  HistoryOutlined,
 } from "@ant-design/icons";
 import { FaStethoscope, FaHeartbeat } from "react-icons/fa";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
@@ -35,6 +37,8 @@ const DashboardLayout: React.FC = () => {
     if (p.startsWith("/family")) return ["5"];
     if (p.startsWith("/prescriptions")) return ["6"];
     if (p.startsWith("/doctor")) return ["7"];
+    if (p.startsWith("/doctors")) return ["8"];
+    if (p.startsWith("/history")) return ["9"];
     return ["1"];
   }, [location.pathname]);
 
@@ -182,6 +186,32 @@ const DashboardLayout: React.FC = () => {
                       Link,
                       { to: "/doctor/appointments" },
                       "Lịch bác sĩ"
+                    ),
+                  },
+                ]
+              : []),
+            ...(hasPermission(user, "view_doctors")
+              ? [
+                  {
+                    key: "8",
+                    icon: React.createElement(MedicineBoxOutlined),
+                    label: React.createElement(
+                      Link,
+                      { to: "/doctors" },
+                      "Bác sĩ"
+                    ),
+                  },
+                ]
+              : []),
+            ...(hasPermission(user, "view_records")
+              ? [
+                  {
+                    key: "9",
+                    icon: React.createElement(HistoryOutlined),
+                    label: React.createElement(
+                      Link,
+                      { to: "/history" },
+                      "Lịch sử khám"
                     ),
                   },
                 ]

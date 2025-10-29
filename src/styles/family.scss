@@ -1,0 +1,110 @@
+.family-page {
+  // Breadcrumb Card
+  .breadcrumb-card {
+    margin-bottom: 16px;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03),
+      0 1px 6px -1px rgba(0, 0, 0, 0.02);
+
+    :global(.ant-card-body) {
+      padding: 12px 24px;
+    }
+  }
+
+  // Add Member Form Card
+  .form-card {
+    margin-bottom: 16px;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03),
+      0 1px 6px -1px rgba(0, 0, 0, 0.02);
+
+    .form-header {
+      margin-bottom: 16px;
+
+      .icon {
+        font-size: 24px;
+        color: #52c41a;
+      }
+
+      h5 {
+        margin: 0;
+      }
+    }
+
+    .form-actions {
+      margin-top: 24px;
+      margin-bottom: 0;
+      text-align: right;
+    }
+
+    // Form inputs
+    .date-picker-full {
+      width: 100%;
+    }
+  }
+
+  // Table Card
+  .table-card {
+    margin-bottom: 16px;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03),
+      0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+
+      .header-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .icon {
+          font-size: 24px;
+          color: #1890ff;
+        }
+
+        h5 {
+          margin: 0;
+        }
+      }
+
+      .search-input {
+        max-width: 400px;
+      }
+    }
+
+    // Table column styles
+    .name-cell {
+      .icon {
+        color: #1890ff;
+      }
+
+      .text {
+        font-weight: 500;
+      }
+    }
+
+    .relation-cell {
+      color: #595959;
+    }
+
+    // Empty state
+    .empty-state {
+      padding: 40px 0;
+      text-align: center;
+
+      .icon {
+        font-size: 48px;
+        color: #d9d9d9;
+      }
+
+      .text {
+        margin-top: 16px;
+        color: #8c8c8c;
+      }
+    }
+  }
+}
