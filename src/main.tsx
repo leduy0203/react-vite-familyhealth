@@ -7,6 +7,7 @@ import { BrowserRouter } from "react-router-dom";
 import { ConfigProvider } from "antd";
 import theme from "./config/theme";
 import "./styles/global.scss";
+import "./styles/doctor.scss";
 import { initAuth } from "./config/initAuth";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

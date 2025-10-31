@@ -37,6 +37,7 @@ export const api = {
           "view_family",
           "view_patients",
           "view_appointments",
+          "view_doctor_appointments",
           "view_prescriptions",
           "view_doctors",
           "create_appointment",
@@ -56,9 +57,8 @@ export const api = {
         permissions: [
           "view_dashboard",
           "view_profile",
-          "view_records",
           "view_patients",
-          "view_appointments",
+          "view_doctor_appointments",
           "view_prescriptions",
           "view_doctors",
           "view_doctor_queue",
@@ -112,6 +112,7 @@ export const api = {
           "view_family",
           "view_patients",
           "view_appointments",
+          "view_doctor_appointments",
           "view_prescriptions",
           "view_doctors",
           "create_appointment",
@@ -130,9 +131,8 @@ export const api = {
         permissions: [
           "view_dashboard",
           "view_profile",
-          "view_records",
           "view_patients",
-          "view_appointments",
+          "view_doctor_appointments",
           "view_prescriptions",
           "view_doctors",
           "view_doctor_queue",
@@ -483,6 +483,99 @@ export const api = {
     return delay(200, { data: recs[idx] });
   },
 
+  // Patients Management
+  // TODO: Replace with real API call
+  getPatients: async (_opts?: { doctorId?: string }): Promise<{ data: any[] }> => {
+    const patients = [
+      {
+        id: "patient1",
+        name: "Nguyễn Văn A",
+        email: "nguyenvana@email.com",
+        phone: "0912345678",
+        dob: "1985-05-15",
+        gender: "male",
+        address: "123 Đường ABC, Quận 1, TP.HCM",
+        bloodType: "O+",
+        allergies: ["Penicillin", "Đậu phộng"],
+        medicalHistory: ["Tiểu đường type 2", "Cao huyết áp"],
+        emergencyContact: { name: "Trần Thị B", phone: "0987654321" },
+        lastVisit: "2025-10-20",
+        totalVisits: 15,
+        status: "active",
+        notes: "Bệnh nhân cần theo dõi đường huyết thường xuyên",
+        createdAt: "2024-01-15T10:00:00",
+      },
+      {
+        id: "patient2",
+        name: "Trần Thị B",
+        email: "tranthib@email.com",
+        phone: "0987654321",
+        dob: "1990-08-22",
+        gender: "female",
+        address: "456 Đường XYZ, Quận 3, TP.HCM",
+        bloodType: "A+",
+        allergies: [],
+        medicalHistory: ["Viêm xoang mạn tính"],
+        emergencyContact: { name: "Nguyễn Văn A", phone: "0912345678" },
+        lastVisit: "2025-10-25",
+        totalVisits: 8,
+        status: "active",
+        notes: "",
+        createdAt: "2024-03-20T14:00:00",
+      },
+      {
+        id: "patient3",
+        name: "Lê Văn C",
+        email: "levanc@email.com",
+        phone: "0901234567",
+        dob: "1978-12-10",
+        gender: "male",
+        address: "789 Đường DEF, Quận 5, TP.HCM",
+        bloodType: "B+",
+        allergies: ["Aspirin"],
+        medicalHistory: ["Bệnh tim mạch", "Cholesterol cao"],
+        emergencyContact: { name: "Phạm Thị D", phone: "0923456789" },
+        lastVisit: "2025-09-30",
+        totalVisits: 25,
+        status: "active",
+        notes: "Bệnh nhân cần kiểm tra tim mạch định kỳ 3 tháng/lần",
+        createdAt: "2023-06-10T09:00:00",
+      },
+      {
+        id: "patient4",
+        name: "Phạm Thị D",
+        email: "phamthid@email.com",
+        phone: "0934567890",
+        dob: "1995-03-18",
+        gender: "female",
+        address: "321 Đường GHI, Quận 10, TP.HCM",
+        bloodType: "AB+",
+        allergies: ["Hải sản"],
+        medicalHistory: [],
+        emergencyContact: { name: "Lê Văn C", phone: "0901234567" },
+        lastVisit: "2025-10-28",
+        totalVisits: 3,
+        status: "active",
+        notes: "",
+        createdAt: "2025-08-01T11:00:00",
+      },
+    ];
+    return delay(300, { data: patients });
+  },
+
+  getPatient: async (id: string): Promise<{ data: any }> => {
+    const res = await api.getPatients();
+    const patient = res.data.find((p) => p.id === id);
+    if (!patient) return Promise.reject({ message: "Patient not found" });
+    return delay(200, { data: patient });
+  },
+
+  updatePatientNotes: async (id: string, notes: string): Promise<{ data: any }> => {
+    const res = await api.getPatient(id);
+    const updated = { ...res.data, notes, updatedAt: new Date().toISOString() };
+    return delay(200, { data: updated });
+  },
+
   // Medical Visit History
   // TODO: Replace with real API call
   // Example: return axios.get('/api/medical-visits')
@@ -599,4 +692,137 @@ export const api = {
     if (!visit) return Promise.reject({ message: "Visit not found" });
     return delay(200, { data: visit });
   },
+
+  // Admin: User Management
+  _users: [
+    {
+      id: "admin",
+      email: "admin@local",
+      name: "Admin Demo",
+      phone: "0900000001",
+      role: { id: "admin", name: "Admin" },
+      permissions: ["view_dashboard", "view_profile", "view_records", "view_family", "view_patients", "view_appointments", "view_doctor_appointments", "view_prescriptions", "view_doctors", "create_appointment", "create_prescription", "transfer_record", "create_record", "view_doctor_queue"],
+      status: "active",
+      createdAt: "2024-01-01T00:00:00",
+    },
+    {
+      id: "doctor",
+      email: "doctor@local",
+      name: "Bác sĩ Demo",
+      phone: "0900000002",
+      role: { id: "doctor", name: "Doctor" },
+      permissions: ["view_dashboard", "view_profile", "view_patients", "view_doctor_appointments", "view_prescriptions", "view_doctors", "view_doctor_queue", "create_appointment", "create_prescription", "mark_record_viewed"],
+      status: "active",
+      createdAt: "2024-02-01T00:00:00",
+    },
+    {
+      id: "user",
+      email: "user@local",
+      name: "Người Dùng Demo",
+      phone: "0900000003",
+      role: { id: "user", name: "User" },
+      permissions: ["view_dashboard", "view_profile", "view_records", "view_family", "view_doctors", "create_record", "transfer_record", "view_appointments"],
+      status: "active",
+      createdAt: "2024-03-01T00:00:00",
+    },
+  ] as any[],
+
+  getUsers: async (): Promise<{ data: any[] }> => {
+    return delay(300, { data: (api as any)._users });
+  },
+
+  createUser: async (user: any): Promise<{ data: any }> => {
+    const newUser = {
+      ...user,
+      id: `user_${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      status: user.status || "active",
+    };
+    (api as any)._users.push(newUser);
+    return delay(200, { data: newUser });
+  },
+
+  updateUser: async (user: any): Promise<{ data: any }> => {
+    const users = (api as any)._users;
+    const index = users.findIndex((u: any) => u.id === user.id);
+    if (index === -1) return Promise.reject({ message: "User not found" });
+    users[index] = { ...users[index], ...user, updatedAt: new Date().toISOString() };
+    return delay(200, { data: users[index] });
+  },
+
+  deleteUser: async (id: string): Promise<{ data: { id: string } }> => {
+    const users = (api as any)._users;
+    const index = users.findIndex((u: any) => u.id === id);
+    if (index === -1) return Promise.reject({ message: "User not found" });
+    users.splice(index, 1);
+    return delay(200, { data: { id } });
+  },
+
+  // Admin: Doctor Management Extensions
+  updateDoctorInfo: async (id: string, data: any): Promise<{ data: any }> => {
+    const doctors = await api.getDoctorsList();
+    const doctor = doctors.data.find((d) => d.id === id);
+    if (!doctor) return Promise.reject({ message: "Doctor not found" });
+    const updated = { ...doctor, ...data, updatedAt: new Date().toISOString() };
+    return delay(200, { data: updated });
+  },
+
+  getDoctorStats: async (id: string): Promise<{ data: any }> => {
+    const stats = {
+      doctorId: id,
+      totalPatients: Math.floor(Math.random() * 200) + 50,
+      totalAppointments: Math.floor(Math.random() * 500) + 100,
+      completedAppointments: Math.floor(Math.random() * 400) + 80,
+      cancelledAppointments: Math.floor(Math.random() * 50) + 10,
+      rating: (Math.random() * 1 + 4).toFixed(1),
+      reviewCount: Math.floor(Math.random() * 100) + 20,
+      revenue: Math.floor(Math.random() * 100000000) + 50000000,
+      monthlyPatients: [
+        { month: "T1", count: Math.floor(Math.random() * 50) + 10 },
+        { month: "T2", count: Math.floor(Math.random() * 50) + 10 },
+        { month: "T3", count: Math.floor(Math.random() * 50) + 10 },
+        { month: "T4", count: Math.floor(Math.random() * 50) + 10 },
+        { month: "T5", count: Math.floor(Math.random() * 50) + 10 },
+        { month: "T6", count: Math.floor(Math.random() * 50) + 10 },
+      ],
+    };
+    return delay(300, { data: stats });
+  },
+
+  // Admin: System Statistics
+  getSystemStats: async (): Promise<{ data: any }> => {
+    const stats = {
+      totalUsers: (api as any)._users.length,
+      totalDoctors: 8,
+      totalPatients: 4,
+      totalAppointments: 3,
+      newAppointmentsToday: 2,
+      newRecordsToday: 1,
+      activeUsers: (api as any)._users.filter((u: any) => u.status === "active").length,
+      pendingAppointments: 1,
+      recentActivities: [
+        { id: 1, type: "appointment", message: "Lịch hẹn mới với BS. Nguyễn Văn An", time: "10 phút trước", icon: "calendar" },
+        { id: 2, type: "record", message: "Hồ sơ mới từ Nguyễn Văn A", time: "30 phút trước", icon: "file" },
+        { id: 3, type: "user", message: "Người dùng mới đăng ký: Trần Thị B", time: "1 giờ trước", icon: "user" },
+        { id: 4, type: "doctor", message: "BS. Lê Văn C cập nhật lịch làm việc", time: "2 giờ trước", icon: "doctor" },
+        { id: 5, type: "appointment", message: "Lịch hẹn hoàn thành với BS. Trần Thị Bình", time: "3 giờ trước", icon: "check" },
+      ],
+      appointmentsByStatus: {
+        pending: 1,
+        confirmed: 1,
+        completed: 1,
+        cancelled: 0,
+      },
+      appointmentsByMonth: [
+        { month: "T7", count: 15 },
+        { month: "T8", count: 22 },
+        { month: "T9", count: 18 },
+        { month: "T10", count: 28 },
+        { month: "T11", count: 12 },
+        { month: "T12", count: 5 },
+      ],
+    };
+    return delay(300, { data: stats });
+  },
 };
+

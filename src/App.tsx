@@ -12,9 +12,12 @@ import AppointmentsPage from "./pages/appointments";
 import FamilyPage from "./pages/family";
 import PrescriptionsPage from "./pages/prescriptions";
 import DoctorAppointments from "./pages/doctor/appointments";
+import DoctorRecords from "./pages/doctor/records";
 import DoctorsPage from "./pages/doctors";
 import MedicalHistoryPage from "./pages/history";
 import UnauthorizedPage from "./pages/unauthorized";
+import AdminDashboard from "./pages/admin/dashboard";
+import AdminUsers from "./pages/admin/users";
 
 function App() {
   return (
@@ -67,8 +70,16 @@ function App() {
           <Route
             path="doctor/appointments"
             element={
-              <PermissionRoute permission="view_appointments">
+              <PermissionRoute permission="view_doctor_appointments">
                 <DoctorAppointments />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="doctor/records"
+            element={
+              <PermissionRoute permission="view_doctor_queue">
+                <DoctorRecords />
               </PermissionRoute>
             }
           />
@@ -101,6 +112,22 @@ function App() {
             element={
               <PermissionRoute permission="view_records">
                 <MedicalHistoryPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="admin/dashboard"
+            element={
+              <PermissionRoute permission="manage_users">
+                <AdminDashboard />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="admin/users"
+            element={
+              <PermissionRoute permission="manage_users">
+                <AdminUsers />
               </PermissionRoute>
             }
           />

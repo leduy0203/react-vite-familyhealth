@@ -1,37 +1,99 @@
-import React, { useEffect } from "react";
-import { Calendar, Badge } from "antd";
+import React, { useEffect, useState } from "react";
+import {
+  Card,
+  Calendar,
+  Badge,
+  Space,
+  Typography,
+  Breadcrumb,
+  Modal,
+  List,
+  Tag,
+  App,
+  Row,
+  Col,
+  Statistic,
+} from "antd";
+import {
+  HomeOutlined,
+  CalendarOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  UserOutlined,
+  EnvironmentOutlined,
+} from "@ant-design/icons";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { fetchAppointments } from "../../redux/slice/appointmentSlice";
-import dayjs from "dayjs";
+import { fetchAppointments, updateAppointment } from "../../redux/slice/appointmentSlice";
+import AppointmentDetailCard from "../../components/appointments/AppointmentDetailCard";
+import type { IAppointment } from "../../types/health";
+import dayjs, { type Dayjs } from "dayjs";
+
+const { Title, Text } = Typography;
 
 const DoctorAppointments: React.FC = () => {
+  const { message } = App.useApp();
   const dispatch = useAppDispatch();
   const { list } = useAppSelector((s) => s.appointment);
+  const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<IAppointment | null>(null);
 
   useEffect(() => {
     dispatch(fetchAppointments());
   }, [dispatch]);
 
-  const dateCellRender = (value: dayjs.Dayjs) => {
+  const handleDateSelect = (date: Dayjs) => {
+    setSelectedDate(date);
+  };
+
+  const handleViewAppointment = (appointment: IAppointment) => {
+    setSelectedAppointment(appointment);
+    setDetailModalOpen(true);
+  };
+
+  const handleUpdateStatus = async (id: string, status: IAppointment["status"]) => {
+    const appointment = list.find((a) => a.id === id);
+    if (!appointment) return;
+
+    try {
+      await dispatch(updateAppointment({ ...appointment, status })).unwrap();
+      message.success("Cập nhật trạng thái thành công");
+      setDetailModalOpen(false);
+      dispatch(fetchAppointments());
+    } catch (err) {
+      message.error("Cập nhật thất bại");
+    }
+  };
+
+  const dateCellRender = (value: Dayjs) => {
     const dateStr = value.format("YYYY-MM-DD");
     const items = list.filter(
       (a) => a.appointmentDate && a.appointmentDate.startsWith(dateStr)
     );
+
     return (
-      <ul className="events">
+      <ul className="events" style={{ listStyle: "none", padding: 0 }}>
         {items.map((item) => (
-          <li key={item.id}>
+          <li key={item.id} style={{ marginBottom: 4 }}>
             <Badge
               status={
                 item.status === "pending"
                   ? "warning"
                   : item.status === "confirmed"
                   ? "success"
-                  : "default"
+                  : item.status === "completed"
+                  ? "default"
+                  : "error"
               }
-              text={`${dayjs(item.appointmentDate).format("HH:mm")} ${
-                item.patientName || ""
-              }`}
+              text={
+                <Text
+                  ellipsis
+                  style={{ fontSize: 11, cursor: "pointer" }}
+                  onClick={() => handleViewAppointment(item)}
+                >
+                  {dayjs(item.appointmentDate).format("HH:mm")} {item.patientName || ""}
+                </Text>
+              }
             />
           </li>
         ))}
@@ -39,13 +101,197 @@ const DoctorAppointments: React.FC = () => {
     );
   };
 
-  return (
-    <div>
-      <div style={{ marginBottom: 12 }}>
-        <h2>Lịch bác sĩ</h2>
-      </div>
+  // Get appointments for selected date
+  const selectedDateStr = selectedDate.format("YYYY-MM-DD");
+  const appointmentsOnSelectedDate = list
+    .filter((a) => a.appointmentDate?.startsWith(selectedDateStr))
+    .sort((a, b) => (a.appointmentDate > b.appointmentDate ? 1 : -1));
 
-      <Calendar dateCellRender={dateCellRender} />
+  // Statistics
+  const pendingCount = list.filter((a) => a.status === "pending").length;
+  const confirmedCount = list.filter((a) => a.status === "confirmed").length;
+  const completedCount = list.filter((a) => a.status === "completed").length;
+
+  const getStatusTag = (status: IAppointment["status"]) => {
+    const statusConfig = {
+      pending: { color: "warning", text: "Chờ xác nhận" },
+      confirmed: { color: "success", text: "Đã xác nhận" },
+      completed: { color: "default", text: "Hoàn thành" },
+      cancelled: { color: "error", text: "Đã hủy" },
+    };
+    const config = statusConfig[status];
+    return <Tag color={config.color}>{config.text}</Tag>;
+  };
+
+  return (
+    <div className="doctor-appointments-page">
+      {/* Breadcrumb */}
+      <Card variant="borderless" style={{ marginBottom: 16 }}>
+        <Breadcrumb
+          items={[
+            {
+              href: "/",
+              title: (
+                <Space>
+                  <HomeOutlined />
+                  <span>Trang chủ</span>
+                </Space>
+              ),
+            },
+            {
+              title: (
+                <Space>
+                  <CalendarOutlined />
+                  <span>Lịch khám bệnh</span>
+                </Space>
+              ),
+            },
+          ]}
+        />
+      </Card>
+
+      {/* Statistics */}
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col xs={24} sm={8}>
+          <Card>
+            <Statistic
+              title="Chờ xác nhận"
+              value={pendingCount}
+              prefix={<ClockCircleOutlined />}
+              valueStyle={{ color: "#faad14" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card>
+            <Statistic
+              title="Đã xác nhận"
+              value={confirmedCount}
+              prefix={<CheckCircleOutlined />}
+              valueStyle={{ color: "#52c41a" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card>
+            <Statistic
+              title="Hoàn thành"
+              value={completedCount}
+              prefix={<CheckCircleOutlined />}
+              valueStyle={{ color: "#1890ff" }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Main Content */}
+      <Row gutter={16}>
+        <Col xs={24} lg={16}>
+          <Card variant="borderless">
+            <div style={{ marginBottom: 16 }}>
+              <Space align="center">
+                <CalendarOutlined style={{ fontSize: 24, color: "#1890ff" }} />
+                <Title level={4} style={{ margin: 0 }}>
+                  Lịch khám bệnh
+                </Title>
+              </Space>
+            </div>
+            <Calendar
+              value={selectedDate}
+              onSelect={handleDateSelect}
+              cellRender={dateCellRender}
+            />
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={8}>
+          <Card variant="borderless">
+            <div style={{ marginBottom: 16 }}>
+              <Title level={5}>
+                <ClockCircleOutlined /> Lịch hẹn ngày{" "}
+                {selectedDate.format("DD/MM/YYYY")}
+              </Title>
+            </div>
+
+            {appointmentsOnSelectedDate.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
+                <CalendarOutlined style={{ fontSize: 48, color: "#d9d9d9" }} />
+                <Text type="secondary" style={{ display: "block", marginTop: 16 }}>
+                  Không có lịch hẹn
+                </Text>
+              </div>
+            ) : (
+              <List
+                dataSource={appointmentsOnSelectedDate}
+                renderItem={(item) => (
+                  <List.Item
+                    style={{ cursor: "pointer", padding: "12px 0" }}
+                    onClick={() => handleViewAppointment(item)}
+                  >
+                    <List.Item.Meta
+                      avatar={
+                        <div
+                          style={{
+                            width: 50,
+                            height: 50,
+                            borderRadius: 8,
+                            background: "#f0f5ff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Text strong style={{ color: "#1890ff", fontSize: 16 }}>
+                            {dayjs(item.appointmentDate).format("HH:mm")}
+                          </Text>
+                        </div>
+                      }
+                      title={
+                        <Space>
+                          <UserOutlined />
+                          <Text strong>{item.patientName}</Text>
+                        </Space>
+                      }
+                      description={
+                        <Space direction="vertical" size={0}>
+                          <Space size="small">
+                            <EnvironmentOutlined style={{ fontSize: 12 }} />
+                            <Text type="secondary" ellipsis style={{ fontSize: 12 }}>
+                              {item.location}
+                            </Text>
+                          </Space>
+                          <div style={{ marginTop: 4 }}>{getStatusTag(item.status)}</div>
+                        </Space>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            )}
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Detail Modal */}
+      <Modal
+        open={detailModalOpen}
+        onCancel={() => setDetailModalOpen(false)}
+        footer={null}
+        width={700}
+        title={
+          <Space>
+            <CalendarOutlined />
+            <span>Chi tiết lịch hẹn</span>
+          </Space>
+        }
+      >
+        {selectedAppointment && (
+          <AppointmentDetailCard
+            appointment={selectedAppointment}
+            onUpdateStatus={handleUpdateStatus}
+          />
+        )}
+      </Modal>
     </div>
   );
 };

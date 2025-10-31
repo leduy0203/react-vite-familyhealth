@@ -1,0 +1,176 @@
+.admin-dashboard {
+  .ant-card {
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  .stats-cards {
+    margin-bottom: 24px;
+
+    .stat-card {
+      .ant-card-body {
+        padding: 24px;
+      }
+
+      .stat-icon {
+        font-size: 40px;
+        margin-bottom: 12px;
+      }
+
+      .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 8px 0;
+        line-height: 1.2;
+      }
+
+      .stat-label {
+        font-size: 14px;
+        color: #8c8c8c;
+        margin: 0;
+      }
+
+      .stat-change {
+        margin-top: 8px;
+        font-size: 13px;
+
+        &.positive {
+          color: #52c41a;
+        }
+
+        &.negative {
+          color: #f5222d;
+        }
+      }
+
+      &.users {
+        border-left: 4px solid #1890ff;
+      }
+
+      &.doctors {
+        border-left: 4px solid #52c41a;
+      }
+
+      &.patients {
+        border-left: 4px solid #faad14;
+      }
+
+      &.active {
+        border-left: 4px solid #722ed1;
+      }
+    }
+  }
+
+  .recent-activity {
+    margin-top: 24px;
+
+    .activity-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .activity-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+
+        .activity-avatar {
+          flex-shrink: 0;
+        }
+
+        .activity-content {
+          flex: 1;
+
+          .activity-name {
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 2px;
+          }
+
+          .activity-detail {
+            font-size: 13px;
+            color: #8c8c8c;
+          }
+        }
+      }
+
+      .activity-time {
+        font-size: 12px;
+        color: #bfbfbf;
+        flex-shrink: 0;
+      }
+
+      &:hover {
+        background-color: #fafafa;
+        margin: 0 -16px;
+        padding: 12px 16px;
+      }
+    }
+  }
+}
+
+.users-page {
+  .ant-card {
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  }
+
+  .ant-table {
+    .ant-table-thead > tr > th {
+      background-color: #fafafa;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .ant-table-tbody > tr {
+      transition: all 0.2s;
+
+      &:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+    }
+  }
+
+  .ant-tag {
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .admin-dashboard {
+    .stats-cards {
+      .stat-card {
+        .stat-value {
+          font-size: 24px;
+        }
+      }
+    }
+
+    .recent-activity {
+      .activity-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+
+        .activity-time {
+          align-self: flex-end;
+        }
+      }
+    }
+  }
+}

@@ -5,6 +5,8 @@ import familyReducer from "./slice/familySlice";
 import appointmentReducer from "./slice/appointmentSlice";
 import prescriptionReducer from "./slice/prescriptionSlice";
 import recordReducer from "./slice/recordSlice";
+import patientReducer from "./slice/patientSlice";
+import userReducer from "./slice/userSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +16,8 @@ export const store = configureStore({
     appointment: appointmentReducer,
     prescription: prescriptionReducer,
     record: recordReducer,
+    patient: patientReducer,
+    user: userReducer,
   },
 });
 
