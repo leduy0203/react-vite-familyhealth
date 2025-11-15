@@ -6,11 +6,8 @@ import {
   UserOutlined,
   LogoutOutlined,
   DashboardOutlined,
-  SolutionOutlined,
-  TeamOutlined,
   ScheduleOutlined,
   HomeOutlined,
-  FileTextOutlined,
   MedicineBoxOutlined,
   HistoryOutlined,
   ControlOutlined,
@@ -33,17 +30,13 @@ const DashboardLayout: React.FC = () => {
   const location = useLocation();
   const selectedKey = React.useMemo(() => {
     const p = location.pathname;
-    if (p.startsWith("/admin/dashboard")) return ["11"];
-    if (p.startsWith("/admin/users")) return ["12"];
-    if (p.startsWith("/appointments")) return ["4"];
-    if (p.startsWith("/doctor/records")) return ["10"];
-    if (p.startsWith("/doctor/appointments")) return ["7"];
-    if (p.startsWith("/records")) return ["2"];
-    if (p.startsWith("/patients")) return ["3"];
-    if (p.startsWith("/family")) return ["5"];
-    if (p.startsWith("/prescriptions")) return ["6"];
-    if (p.startsWith("/doctors")) return ["8"];
-    if (p.startsWith("/history")) return ["9"];
+    if (p.startsWith("/admin/dashboard")) return ["6"];
+    if (p.startsWith("/admin/users")) return ["7"];
+    if (p.startsWith("/appointments")) return ["2"];
+    if (p.startsWith("/doctor/appointments")) return ["3"];
+    if (p.startsWith("/family")) return ["4"];
+    if (p.startsWith("/doctors")) return ["5"];
+    if (p.startsWith("/history")) return ["8"];
     return ["1"];
   }, [location.pathname]);
 
@@ -116,68 +109,15 @@ const DashboardLayout: React.FC = () => {
                   },
                 ]
               : []),
-            ...(hasPermission(user, "view_records")
-              ? [
-                  {
-                    key: "2",
-                    icon: React.createElement(SolutionOutlined),
-                    label: React.createElement(
-                      Link,
-                      { to: "/records" },
-                      "Hồ sơ"
-                    ),
-                  },
-                ]
-              : []),
-            ...(hasPermission(user, "view_patients")
-              ? [
-                  {
-                    key: "3",
-                    icon: React.createElement(TeamOutlined),
-                    label: React.createElement(
-                      Link,
-                      { to: "/patients" },
-                      "Bệnh nhân"
-                    ),
-                  },
-                ]
-              : []),
             ...(hasPermission(user, "view_appointments")
               ? [
                   {
-                    key: "4",
+                    key: "2",
                     icon: React.createElement(ScheduleOutlined),
                     label: React.createElement(
                       Link,
                       { to: "/appointments" },
-                      "Lịch hẹn của tôi"
-                    ),
-                  },
-                ]
-              : []),
-            ...(hasPermission(user, "view_family") ||
-            hasPermission(user, "view_records")
-              ? [
-                  {
-                    key: "5",
-                    icon: React.createElement(HomeOutlined),
-                    label: React.createElement(
-                      Link,
-                      { to: "/family" },
-                      "Gia đình"
-                    ),
-                  },
-                ]
-              : []),
-            ...(hasPermission(user, "view_prescriptions")
-              ? [
-                  {
-                    key: "6",
-                    icon: React.createElement(FileTextOutlined),
-                    label: React.createElement(
-                      Link,
-                      { to: "/prescriptions" },
-                      "Đơn thuốc"
+                      "Lịch hẹn"
                     ),
                   },
                 ]
@@ -185,7 +125,7 @@ const DashboardLayout: React.FC = () => {
             ...(hasPermission(user, "view_doctor_appointments")
               ? [
                   {
-                    key: "7",
+                    key: "3",
                     icon: React.createElement(FaStethoscope),
                     label: React.createElement(
                       Link,
@@ -195,15 +135,15 @@ const DashboardLayout: React.FC = () => {
                   },
                 ]
               : []),
-            ...(hasPermission(user, "view_doctor_queue")
+            ...(hasPermission(user, "view_family")
               ? [
                   {
-                    key: "10",
-                    icon: React.createElement(FileTextOutlined),
+                    key: "4",
+                    icon: React.createElement(HomeOutlined),
                     label: React.createElement(
                       Link,
-                      { to: "/doctor/records" },
-                      "Hồ sơ được gửi"
+                      { to: "/family" },
+                      "Thành viên"
                     ),
                   },
                 ]
@@ -211,7 +151,7 @@ const DashboardLayout: React.FC = () => {
             ...(hasPermission(user, "view_doctors")
               ? [
                   {
-                    key: "8",
+                    key: "5",
                     icon: React.createElement(MedicineBoxOutlined),
                     label: React.createElement(
                       Link,
@@ -221,15 +161,15 @@ const DashboardLayout: React.FC = () => {
                   },
                 ]
               : []),
-            ...(hasPermission(user, "view_records")
+            ...(hasPermission(user, "view_history")
               ? [
                   {
-                    key: "9",
+                    key: "8",
                     icon: React.createElement(HistoryOutlined),
                     label: React.createElement(
                       Link,
                       { to: "/history" },
-                      "Lịch sử khám"
+                      "Kết quả khám"
                     ),
                   },
                 ]
@@ -239,24 +179,24 @@ const DashboardLayout: React.FC = () => {
                   {
                     key: "admin",
                     icon: React.createElement(ControlOutlined),
-                    label: "Quản trị hệ thống",
+                    label: "Quản trị",
                     children: [
                       {
-                        key: "11",
+                        key: "6",
                         icon: React.createElement(DashboardOutlined),
                         label: React.createElement(
                           Link,
                           { to: "/admin/dashboard" },
-                          "Admin Dashboard"
+                          "Thống kê"
                         ),
                       },
                       {
-                        key: "12",
+                        key: "7",
                         icon: React.createElement(UsergroupAddOutlined),
                         label: React.createElement(
                           Link,
                           { to: "/admin/users" },
-                          "Quản lý người dùng"
+                          "Người dùng"
                         ),
                       },
                     ],

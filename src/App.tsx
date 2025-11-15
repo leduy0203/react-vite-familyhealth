@@ -5,14 +5,10 @@ import DashboardLayout from "./components/layout/DashboardLayout";
 import ProtectedRoute from "./components/share/ProtectedRoute";
 import PermissionRoute from "./components/share/PermissionRoute";
 import DashboardPage from "./pages/dashboard";
-import RecordsPage from "./pages/records";
-import PatientsPage from "./pages/patients";
 import ProfilePage from "./pages/account/Profile";
 import AppointmentsPage from "./pages/appointments";
 import FamilyPage from "./pages/family";
-import PrescriptionsPage from "./pages/prescriptions";
 import DoctorAppointments from "./pages/doctor/appointments";
-import DoctorRecords from "./pages/doctor/records";
 import DoctorsPage from "./pages/doctors";
 import MedicalHistoryPage from "./pages/history";
 import UnauthorizedPage from "./pages/unauthorized";
@@ -54,16 +50,8 @@ function App() {
           <Route
             path="family"
             element={
-              <PermissionRoute permission={["view_family", "view_records"]}>
+              <PermissionRoute permission="view_family">
                 <FamilyPage />
-              </PermissionRoute>
-            }
-          />
-          <Route
-            path="prescriptions"
-            element={
-              <PermissionRoute permission="view_prescriptions">
-                <PrescriptionsPage />
               </PermissionRoute>
             }
           />
@@ -72,30 +60,6 @@ function App() {
             element={
               <PermissionRoute permission="view_doctor_appointments">
                 <DoctorAppointments />
-              </PermissionRoute>
-            }
-          />
-          <Route
-            path="doctor/records"
-            element={
-              <PermissionRoute permission="view_doctor_queue">
-                <DoctorRecords />
-              </PermissionRoute>
-            }
-          />
-          <Route
-            path="records"
-            element={
-              <PermissionRoute permission="view_records">
-                <RecordsPage />
-              </PermissionRoute>
-            }
-          />
-          <Route
-            path="patients"
-            element={
-              <PermissionRoute permission="view_patients">
-                <PatientsPage />
               </PermissionRoute>
             }
           />
@@ -110,7 +74,7 @@ function App() {
           <Route
             path="history"
             element={
-              <PermissionRoute permission="view_records">
+              <PermissionRoute permission="view_history">
                 <MedicalHistoryPage />
               </PermissionRoute>
             }

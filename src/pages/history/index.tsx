@@ -30,7 +30,6 @@ import {
 } from "@ant-design/icons";
 import { api } from "../../config/api";
 import type { IMedicalVisit } from "../../types/health";
-import "../../styles/history.scss";
 
 const { Title, Text, Paragraph } = Typography;
 

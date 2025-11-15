@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   App,
   Avatar,
@@ -8,7 +8,6 @@ import {
   Empty,
   Input,
   List,
-  Rate,
   Select,
   Space,
   Tag,
@@ -20,64 +19,87 @@ import {
   HomeOutlined,
   MailOutlined,
   MedicineBoxOutlined,
-  PhoneOutlined,
   SearchOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { api } from "../../config/api";
-import type { IDoctor } from "../../types/health";
+import { doctorService } from "../../services/doctorService";
+import { EXPERTISE_LABELS, GENDER_LABELS } from "../../constants/expertise";
+import type { IDoctorNew, DoctorListMeta } from "../../types/doctor.types";
 import "../../styles/doctors.scss";
 
 const { Title, Text } = Typography;
 
 const DoctorsPage: React.FC = () => {
-  const [doctors, setDoctors] = useState<IDoctor[]>([]);
+  const [doctors, setDoctors] = useState<IDoctorNew[]>([]);
+  const [meta, setMeta] = useState<DoctorListMeta | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [selectedSpecialization, setSelectedSpecialization] =
-    useState<string>();
+  const [selectedExpertise, setSelectedExpertise] = useState<string>();
   const { message } = App.useApp();
 
   // Fetch doctors from API
-  useEffect(() => {
-    const fetchDoctors = async () => {
+  const fetchDoctors = useCallback(
+    async (page = 0, pageSize = 20, search?: string) => {
       setLoading(true);
       try {
-        const res = await api.getDoctorsList();
-        setDoctors(res.data);
+        const response = await doctorService.getList({
+          page,
+          pageSize,
+          search,
+        });
+        setDoctors(response.data.result);
+        setMeta(response.data.meta);
       } catch (error) {
         message.error("Không thể tải danh sách bác sĩ");
         console.error("Error fetching doctors:", error);
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchDoctors();
-  }, [message]);
-
-  // Filter doctors
-  const filteredDoctors = doctors.filter((doc) => {
-    const matchSearch =
-      !searchText ||
-      doc.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      doc.specialization.toLowerCase().includes(searchText.toLowerCase()) ||
-      doc.hospital.toLowerCase().includes(searchText.toLowerCase());
-
-    const matchSpecialization =
-      !selectedSpecialization || doc.specialization === selectedSpecialization;
-
-    return matchSearch && matchSpecialization;
-  });
-
-  // Get unique specializations for filter
-  const specializations = Array.from(
-    new Set(doctors.map((d) => d.specialization))
+    },
+    [message]
   );
 
-  const handleBookAppointment = (doctor: IDoctor) => {
-    console.log("Book appointment with:", doctor.name);
+  useEffect(() => {
+    fetchDoctors();
+  }, [fetchDoctors]);
+
+  // Filter doctors locally (by expertise only, search is done on server)
+  const filteredDoctors = doctors.filter((doc) => {
+    const matchExpertise =
+      !selectedExpertise || doc.expertise === selectedExpertise;
+    return matchExpertise;
+  });
+
+  // Get unique expertises for filter
+  const expertises = Array.from(new Set(doctors.map((d) => d.expertise)));
+
+  const handleSearch = (value: string) => {
+    setSearchText(value);
+    fetchDoctors(0, 20, value || undefined);
+  };
+
+  const handlePageChange = (page: number, pageSize: number) => {
+    fetchDoctors(page - 1, pageSize, searchText || undefined);
+  };
+
+  const handleBookAppointment = (doctor: IDoctorNew) => {
+    console.log("Book appointment with:", doctor.fullname);
     // TODO: Navigate to appointments page with doctor pre-selected
+  };
+
+  const getAgeFromDOB = (dob?: string | null): number | null => {
+    if (!dob) return null;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return age;
   };
 
   return (
@@ -118,30 +140,34 @@ const DoctorsPage: React.FC = () => {
 
           {/* Filters */}
           <Space className="filters" wrap>
-            <Input
+            <Input.Search
               className="search-input"
-              placeholder="Tìm kiếm theo tên bác sĩ, chuyên khoa, bệnh viện..."
+              placeholder="Tìm kiếm theo tên bác sĩ..."
               prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
+              onSearch={handleSearch}
               allowClear
+              enterButton
+              style={{ minWidth: 300 }}
             />
             <Select
               className="specialization-select"
               placeholder="Chọn chuyên khoa"
               allowClear
-              value={selectedSpecialization}
-              onChange={setSelectedSpecialization}
+              value={selectedExpertise}
+              onChange={setSelectedExpertise}
+              style={{ minWidth: 200 }}
             >
-              {specializations.map((spec) => (
-                <Select.Option key={spec} value={spec}>
-                  {spec}
+              {expertises.map((exp) => (
+                <Select.Option key={exp} value={exp}>
+                  {EXPERTISE_LABELS[exp] || exp}
                 </Select.Option>
               ))}
             </Select>
           </Space>
 
-          <Text type="secondary">Tìm thấy {filteredDoctors.length} bác sĩ</Text>
+          <Text type="secondary">Tìm thấy {meta?.total || 0} bác sĩ</Text>
         </div>
 
         {/* Doctor List */}
@@ -157,9 +183,13 @@ const DoctorsPage: React.FC = () => {
             ),
           }}
           pagination={{
-            pageSize: 6,
-            showSizeChanger: false,
+            current: (meta?.page || 0) + 1,
+            pageSize: meta?.pageSize || 20,
+            total: meta?.total || 0,
+            showSizeChanger: true,
             showTotal: (total) => `Tổng ${total} bác sĩ`,
+            onChange: handlePageChange,
+            pageSizeOptions: ["10", "20", "50"],
           }}
           renderItem={(doctor) => (
             <List.Item className="doctor-list-item">
@@ -169,76 +199,59 @@ const DoctorsPage: React.FC = () => {
                   <Avatar
                     size={80}
                     icon={<UserOutlined />}
-                    src={doctor.avatar}
                     className="doctor-avatar"
                   />
 
                   {/* Doctor Information */}
                   <div className="doctor-info">
                     <Space direction="vertical" size={8} className="info-space">
-                      {/* Name & Rating */}
+                      {/* Name & Gender */}
                       <div className="doctor-header">
                         <div className="doctor-name-rating">
-                          <Title level={5}>{doctor.name}</Title>
-                          <div className="rating-container">
-                            <Rate disabled allowHalf value={doctor.rating} />
-                            <Text type="secondary" className="rating-text">
-                              ({doctor.rating})
-                            </Text>
-                          </div>
+                          <Title level={5}>{doctor.fullname}</Title>
+                          <Tag
+                            color={doctor.gender === "MALE" ? "blue" : "pink"}
+                          >
+                            {GENDER_LABELS[doctor.gender]}
+                          </Tag>
                         </div>
-                        <Tag color={doctor.available ? "green" : "red"}>
-                          {doctor.available ? "Đang khám" : "Không khám"}
-                        </Tag>
                       </div>
 
-                      {/* Specialization & Experience */}
+                      {/* Expertise & Age */}
                       <div className="doctor-tags">
-                        <Tag color="blue">{doctor.specialization}</Tag>
-                        <Tag>{doctor.experience} năm kinh nghiệm</Tag>
-                        {doctor.education && <Tag>{doctor.education}</Tag>}
+                        <Tag color="blue">
+                          {EXPERTISE_LABELS[doctor.expertise] ||
+                            doctor.expertise}
+                        </Tag>
+                        {doctor.dateOfBirth && (
+                          <Tag>
+                            {getAgeFromDOB(doctor.dateOfBirth)} tuổi
+                          </Tag>
+                        )}
                       </div>
+
+                      {/* Bio */}
+                      {doctor.bio && (
+                        <Text type="secondary" className="doctor-bio">
+                          {doctor.bio}
+                        </Text>
+                      )}
 
                       {/* Contact Info */}
                       <div className="doctor-contact">
-                        <div className="contact-item">
-                          <EnvironmentOutlined className="icon hospital-icon" />
-                          <Text>{doctor.hospital}</Text>
-                        </div>
                         {doctor.address && (
-                          <Text
-                            type="secondary"
-                            className="contact-item address"
-                          >
-                            <EnvironmentOutlined className="icon address-icon" />
-                            {doctor.address}
-                          </Text>
-                        )}
-                        {doctor.phone && (
-                          <Text type="secondary" className="contact-item">
-                            <PhoneOutlined className="icon phone-icon" />
-                            {doctor.phone}
-                          </Text>
+                          <div className="contact-item">
+                            <EnvironmentOutlined className="icon" />
+                            <Text>{doctor.address}</Text>
+                          </div>
                         )}
                         {doctor.email && (
-                          <Text type="secondary" className="contact-item">
-                            <MailOutlined className="icon email-icon" />
-                            {doctor.email}
-                          </Text>
+                          <div className="contact-item">
+                            <MailOutlined className="icon" />
+                            <Text type="secondary">{doctor.email}</Text>
+                          </div>
                         )}
                       </div>
-
-                      {/* Languages */}
-                      {doctor.languages && doctor.languages.length > 0 && (
-                        <div className="doctor-languages">
-                          <Text type="secondary" className="languages-label">
-                            Ngôn ngữ:{" "}
-                          </Text>
-                          {doctor.languages.map((lang) => (
-                            <Tag key={lang}>{lang}</Tag>
-                          ))}
-                        </div>
-                      )}
                     </Space>
                   </div>
 
@@ -248,7 +261,6 @@ const DoctorsPage: React.FC = () => {
                       type="primary"
                       icon={<CalendarOutlined />}
                       onClick={() => handleBookAppointment(doctor)}
-                      disabled={!doctor.available}
                       className="book-button"
                     >
                       Đặt lịch
