@@ -14,6 +14,7 @@ import MedicalHistoryPage from "./pages/history";
 import UnauthorizedPage from "./pages/unauthorized";
 import AdminDashboard from "./pages/admin/dashboard";
 import AdminUsers from "./pages/admin/users";
+import AdminDoctors from "./pages/admin/doctors";
 
 function App() {
   return (
@@ -31,18 +32,13 @@ function App() {
           }
         >
           <Route index element={<DashboardPage />} />
-          <Route
-            path="account/profile"
-            element={
-              <PermissionRoute permission="view_profile">
-                <ProfilePage />
-              </PermissionRoute>
-            }
-          />
+          <Route path="account/profile" element={<ProfilePage />} />
+          
+          {/* PATIENT Routes */}
           <Route
             path="appointments"
             element={
-              <PermissionRoute permission="view_appointments">
+              <PermissionRoute role="PATIENT">
                 <AppointmentsPage />
               </PermissionRoute>
             }
@@ -50,23 +46,15 @@ function App() {
           <Route
             path="family"
             element={
-              <PermissionRoute permission="view_family">
+              <PermissionRoute role="PATIENT">
                 <FamilyPage />
-              </PermissionRoute>
-            }
-          />
-          <Route
-            path="doctor/appointments"
-            element={
-              <PermissionRoute permission="view_doctor_appointments">
-                <DoctorAppointments />
               </PermissionRoute>
             }
           />
           <Route
             path="doctors"
             element={
-              <PermissionRoute permission="view_doctors">
+              <PermissionRoute role="PATIENT">
                 <DoctorsPage />
               </PermissionRoute>
             }
@@ -74,15 +62,27 @@ function App() {
           <Route
             path="history"
             element={
-              <PermissionRoute permission="view_history">
+              <PermissionRoute role="PATIENT">
                 <MedicalHistoryPage />
               </PermissionRoute>
             }
           />
+
+          {/* DOCTOR Routes */}
+          <Route
+            path="doctor/appointments"
+            element={
+              <PermissionRoute role="DOCTOR">
+                <DoctorAppointments />
+              </PermissionRoute>
+            }
+          />
+
+          {/* ADMIN Routes */}
           <Route
             path="admin/dashboard"
             element={
-              <PermissionRoute permission="manage_users">
+              <PermissionRoute role="ADMIN">
                 <AdminDashboard />
               </PermissionRoute>
             }
@@ -90,8 +90,16 @@ function App() {
           <Route
             path="admin/users"
             element={
-              <PermissionRoute permission="manage_users">
+              <PermissionRoute role="ADMIN">
                 <AdminUsers />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="admin/doctors"
+            element={
+              <PermissionRoute role="ADMIN">
+                <AdminDoctors />
               </PermissionRoute>
             }
           />

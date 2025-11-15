@@ -1,73 +1,111 @@
-# React + TypeScript + Vite
+# 👨‍👩‍👧‍👦 FamilyHealth - Quản lý Sức khỏe Gia đình
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Hệ thống quản lý sức khỏe gia đình với 3 vai trò: **Admin**, **Bác sĩ**, và **Bệnh nhân**.
 
-Currently, two official plugins are available:
+## 🚀 Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Frontend:** React 18 + TypeScript + Vite
+- **UI Library:** Ant Design 5
+- **State Management:** Redux Toolkit
+- **HTTP Client:** Axios
+- **Styling:** SCSS Modules
+- **Date Library:** Day.js
+- **Backend API:** Spring Boot (Java)
 
-## React Compiler
+## 📦 Cài đặt
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+# Clone repository
+git clone <repo-url>
 
-## Expanding the ESLint configuration
+# Cài đặt dependencies
+npm install
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Tạo file .env
+cp .env.example .env
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🔧 Cấu hình
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Tạo file `.env` với nội dung:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_API_URL=http://localhost:8080/familyhealth/api/v1
 ```
+
+## 🏃 Chạy dự án
+
+```bash
+# Development mode
+npm run dev
+
+# Build production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+## 🔐 Hệ thống phân quyền
+
+### **ADMIN** (Quản trị viên)
+- Quản lý người dùng
+- Quản lý bác sĩ (CRUD)
+- Xem thống kê hệ thống
+
+### **DOCTOR** (Bác sĩ)
+- Quản lý lịch khám bệnh
+- Cập nhật kết quả khám
+- Quản lý bệnh nhân
+
+### **PATIENT** (Bệnh nhân)
+- Quản lý thành viên gia đình
+- Đặt lịch khám
+- Xem kết quả khám bệnh
+
+## 📚 Tài liệu
+
+- [ROLE_SYSTEM.md](./ROLE_SYSTEM.md) - Chi tiết về hệ thống phân quyền
+- [MENU_STRUCTURE.md](./MENU_STRUCTURE.md) - Cấu trúc menu và tính năng admin
+- [REFACTOR_SUMMARY.md](./REFACTOR_SUMMARY.md) - Lịch sử refactoring
+
+## 🔑 Đăng nhập thử nghiệm
+
+```
+ADMIN:   admin / password
+DOCTOR:  doctor / password  
+PATIENT: patient / password
+```
+
+## 📁 Cấu trúc thư mục
+
+```
+src/
+├── api/              # API configuration
+├── components/       # Reusable components
+│   ├── admin/       # Admin components
+│   ├── layout/      # Layout components
+│   └── share/       # Shared components
+├── config/          # App configuration
+├── constants/       # Constants & enums
+├── pages/           # Page components
+│   ├── admin/      # Admin pages
+│   ├── doctor/     # Doctor pages
+│   └── ...
+├── redux/           # Redux store & slices
+├── services/        # API services
+├── styles/          # Global styles
+└── types/           # TypeScript types
+```
+
+## 🤝 Đóng góp
+
+1. Fork repository
+2. Tạo branch: `git checkout -b feature/AmazingFeature`
+3. Commit: `git commit -m 'Add some AmazingFeature'`
+4. Push: `git push origin feature/AmazingFeature`
+5. Tạo Pull Request
+
+## 📄 License
+
+MIT License

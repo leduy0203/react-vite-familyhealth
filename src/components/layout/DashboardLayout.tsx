@@ -18,7 +18,7 @@ import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setLogoutAction } from "../../redux/slice/accountSlice";
 import "../../styles/layout.scss";
-import { hasPermission } from "../../config/permissions";
+import { hasRole } from "../../config/permissions";
 
 const { Header, Sider, Content } = Layout;
 
@@ -32,6 +32,7 @@ const DashboardLayout: React.FC = () => {
     const p = location.pathname;
     if (p.startsWith("/admin/dashboard")) return ["6"];
     if (p.startsWith("/admin/users")) return ["7"];
+    if (p.startsWith("/admin/doctors")) return ["9"];
     if (p.startsWith("/appointments")) return ["2"];
     if (p.startsWith("/doctor/appointments")) return ["3"];
     if (p.startsWith("/family")) return ["4"];
@@ -100,81 +101,8 @@ const DashboardLayout: React.FC = () => {
           selectedKeys={selectedKey}
           style={{ fontSize: 17 }}
           items={[
-            ...(hasPermission(user, "view_dashboard")
-              ? [
-                  {
-                    key: "1",
-                    icon: React.createElement(DashboardOutlined),
-                    label: React.createElement(Link, { to: "/" }, "Dashboard"),
-                  },
-                ]
-              : []),
-            ...(hasPermission(user, "view_appointments")
-              ? [
-                  {
-                    key: "2",
-                    icon: React.createElement(ScheduleOutlined),
-                    label: React.createElement(
-                      Link,
-                      { to: "/appointments" },
-                      "Lịch hẹn"
-                    ),
-                  },
-                ]
-              : []),
-            ...(hasPermission(user, "view_doctor_appointments")
-              ? [
-                  {
-                    key: "3",
-                    icon: React.createElement(FaStethoscope),
-                    label: React.createElement(
-                      Link,
-                      { to: "/doctor/appointments" },
-                      "Lịch khám bệnh"
-                    ),
-                  },
-                ]
-              : []),
-            ...(hasPermission(user, "view_family")
-              ? [
-                  {
-                    key: "4",
-                    icon: React.createElement(HomeOutlined),
-                    label: React.createElement(
-                      Link,
-                      { to: "/family" },
-                      "Thành viên"
-                    ),
-                  },
-                ]
-              : []),
-            ...(hasPermission(user, "view_doctors")
-              ? [
-                  {
-                    key: "5",
-                    icon: React.createElement(MedicineBoxOutlined),
-                    label: React.createElement(
-                      Link,
-                      { to: "/doctors" },
-                      "Bác sĩ"
-                    ),
-                  },
-                ]
-              : []),
-            ...(hasPermission(user, "view_history")
-              ? [
-                  {
-                    key: "8",
-                    icon: React.createElement(HistoryOutlined),
-                    label: React.createElement(
-                      Link,
-                      { to: "/history" },
-                      "Kết quả khám"
-                    ),
-                  },
-                ]
-              : []),
-            ...(hasPermission(user, "manage_users")
+            // Admin Menu - Chỉ hiển thị cho ADMIN
+            ...(hasRole(user, "ADMIN")
               ? [
                   {
                     key: "admin",
@@ -199,7 +127,78 @@ const DashboardLayout: React.FC = () => {
                           "Người dùng"
                         ),
                       },
+                      {
+                        key: "9",
+                        icon: React.createElement(MedicineBoxOutlined),
+                        label: React.createElement(
+                          Link,
+                          { to: "/admin/doctors" },
+                          "Quản lý bác sĩ"
+                        ),
+                      },
                     ],
+                  },
+                ]
+              : []),
+
+            // Doctor Menu - Chỉ hiển thị cho DOCTOR
+            ...(hasRole(user, "DOCTOR")
+              ? [
+                  {
+                    key: "3",
+                    icon: React.createElement(FaStethoscope),
+                    label: React.createElement(
+                      Link,
+                      { to: "/doctor/appointments" },
+                      "Lịch khám bệnh"
+                    ),
+                  },
+                ]
+              : []),
+
+            // Patient Menu - Hiển thị cho PATIENT
+            ...(hasRole(user, "PATIENT")
+              ? [
+                  {
+                    key: "1",
+                    icon: React.createElement(DashboardOutlined),
+                    label: React.createElement(Link, { to: "/" }, "Dashboard"),
+                  },
+                  {
+                    key: "4",
+                    icon: React.createElement(HomeOutlined),
+                    label: React.createElement(
+                      Link,
+                      { to: "/family" },
+                      "Thành viên"
+                    ),
+                  },
+                  {
+                    key: "2",
+                    icon: React.createElement(ScheduleOutlined),
+                    label: React.createElement(
+                      Link,
+                      { to: "/appointments" },
+                      "Lịch hẹn"
+                    ),
+                  },
+                  {
+                    key: "5",
+                    icon: React.createElement(MedicineBoxOutlined),
+                    label: React.createElement(
+                      Link,
+                      { to: "/doctors" },
+                      "Danh sách bác sĩ"
+                    ),
+                  },
+                  {
+                    key: "8",
+                    icon: React.createElement(HistoryOutlined),
+                    label: React.createElement(
+                      Link,
+                      { to: "/history" },
+                      "Kết quả khám"
+                    ),
                   },
                 ]
               : []),

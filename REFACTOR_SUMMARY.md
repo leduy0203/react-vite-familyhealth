@@ -310,7 +310,30 @@ PUT    /api/v1/payments/{id}
 
 ---
 
-**Status:** ✅ ĐÃ HOÀN THÀNH - Project sạch sẽ, đơn giản, sẵn sàng tích hợp API  
+## 🔄 UPDATE MỚI NHẤT (16/11/2025 - 23:50)
+
+### **Chuyển đổi: Permission-based → Role-based Authorization**
+
+#### **Thay đổi:**
+- ❌ **Xóa:** Hệ thống permissions (10+ permissions)
+- ✅ **Thêm:** Hệ thống 3 roles (`ADMIN`, `DOCTOR`, `PATIENT`)
+- ✅ **Tạo:** `/admin/doctors` - Trang quản lý bác sĩ cho ADMIN
+- ✅ **Sắp xếp:** Menu sidebar theo từng role riêng biệt
+
+#### **Menu theo Role:**
+```
+ADMIN    → Quản trị (Thống kê, Người dùng, Quản lý bác sĩ)
+DOCTOR   → Lịch khám bệnh
+PATIENT  → Dashboard, Thành viên, Lịch hẹn, Bác sĩ, Kết quả
+```
+
+#### **Xem chi tiết:**
+- `MENU_STRUCTURE.md` - Cấu trúc menu & trang admin doctors
+- `ROLE_SYSTEM.md` - Hướng dẫn chi tiết hệ thống role mới
+
+---
+
+**Status:** ✅ ĐÃ HOÀN THÀNH - Project sử dụng role-based authorization  
 **Build:** ✅ No errors  
 **Next Step:** Tích hợp API cho từng page theo DB schema  
-**Last Updated:** 2025-11-16 23:30
+**Last Updated:** 2025-11-16 23:50

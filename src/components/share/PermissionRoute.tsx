@@ -1,21 +1,20 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAppSelector } from "../../redux/hooks";
-import { hasPermission } from "../../config/permissions";
+import { hasRole, type UserRole } from "../../config/permissions";
 
 interface Props {
-  permission: string | string[];
+  role: UserRole | UserRole[];
   children: React.ReactElement;
 }
 
-const PermissionRoute: React.FC<Props> = ({ permission, children }) => {
+const PermissionRoute: React.FC<Props> = ({ role, children }) => {
   const user = useAppSelector((s) => s.account.user);
   if (!user) return <Navigate to="/login" replace />;
 
-  const perms = Array.isArray(permission) ? permission : [permission];
-  const allowed = perms.some((p) => hasPermission(user, p));
+  const allowed = hasRole(user, role);
   if (!allowed) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/unauthorized" replace />;
   }
   return children;
 };

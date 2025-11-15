@@ -2,12 +2,61 @@
 
 import type { IDoctor } from "../types/health";
 
+/**
+ * 🔐 HỆ THỐNG PHÂN QUYỀN THEO 3 ROLES
+ * 
+ * ============================================
+ * 1️⃣ ADMIN - Quản trị viên
+ * ============================================
+ * 📊 Menu:
+ *    - Quản trị (Submenu)
+ *      ├── Thống kê (/admin/dashboard)
+ *      ├── Người dùng (/admin/users)
+ *      └── Quản lý bác sĩ (/admin/doctors)
+ * 
+ * 🎯 Chức năng:
+ *    - Xem tổng quan hệ thống
+ *    - Quản lý người dùng (CRUD)
+ *    - Quản lý bác sĩ (CRUD)
+ *    - Xem thống kê, báo cáo
+ * 
+ * ============================================
+ * 2️⃣ DOCTOR - Bác sĩ
+ * ============================================
+ * 📊 Menu:
+ *    - Lịch khám bệnh (/doctor/appointments)
+ * 
+ * 🎯 Chức năng:
+ *    - Xem lịch khám của mình
+ *    - Cập nhật trạng thái lịch hẹn
+ *    - Thêm kết quả khám bệnh
+ *    - Quản lý bệnh nhân của mình
+ * 
+ * ============================================
+ * 3️⃣ PATIENT - Bệnh nhân/Người dùng
+ * ============================================
+ * 📊 Menu:
+ *    - Dashboard (/)
+ *    - Thành viên (/family)
+ *    - Lịch hẹn (/appointments)
+ *    - Danh sách bác sĩ (/doctors)
+ *    - Kết quả khám (/history)
+ * 
+ * 🎯 Chức năng:
+ *    - Xem dashboard cá nhân
+ *    - Quản lý thành viên gia đình
+ *    - Đặt lịch khám bệnh
+ *    - Tìm kiếm bác sĩ
+ *    - Xem kết quả khám bệnh
+ * ============================================
+ */
+export type UserRole = "ADMIN" | "DOCTOR" | "PATIENT";
+
 export interface IUser {
   id: string;
   email: string;
   name: string;
-  role: { id: string; name: string };
-  permissions?: string[];
+  role: { id: string; name: UserRole };
 }
 
 function delay<T>(ms: number, value: T): Promise<T> {
@@ -24,70 +73,35 @@ export const api = {
     let user: IUser;
     let token = "mock-token-user";
 
+    // 🔐 ADMIN Role - Quản trị toàn bộ hệ thống
     if (uname.includes("admin")) {
       user = {
         id: "admin",
         email: username,
         name: "Admin Demo",
-        role: { id: "admin", name: "Admin" },
-        permissions: [
-          "view_dashboard",
-          "view_profile",
-          "view_records",
-          "view_family",
-          "view_patients",
-          "view_appointments",
-          "view_doctor_appointments",
-          "view_prescriptions",
-          "view_doctors",
-          "create_appointment",
-          "create_prescription",
-          "transfer_record",
-          "create_record",
-          "view_doctor_queue",
-        ],
+        role: { id: "1", name: "ADMIN" },
       };
       token = "mock-token-admin";
-    } else if (uname.includes("doctor")) {
+    } 
+    // 🩺 DOCTOR Role - Bác sĩ quản lý lịch khám
+    else if (uname.includes("doctor")) {
       user = {
         id: "doctor",
         email: username,
         name: "Bác sĩ Demo",
-        role: { id: "doctor", name: "Doctor" },
-        permissions: [
-          "view_dashboard",
-          "view_profile",
-          "view_patients",
-          "view_doctor_appointments",
-          "view_prescriptions",
-          "view_doctors",
-          "view_doctor_queue",
-          "create_appointment",
-          "create_prescription",
-          "mark_record_viewed",
-        ],
+        role: { id: "2", name: "DOCTOR" },
       };
       token = "mock-token-doctor";
-    } else {
+    } 
+    // 👤 PATIENT Role - Người dùng/Bệnh nhân
+    else {
       user = {
         id: "user",
         email: username,
         name: "Người Dùng Demo",
-        role: { id: "user", name: "User" },
-        permissions: [
-          "view_dashboard",
-          "view_profile",
-          "view_records",
-          "view_family",
-          "view_doctors",
-          "view_history",
-          "view_appointments",
-          "view_doctors",
-          "create_record",
-          "transfer_record",
-        ],
+        role: { id: "3", name: "PATIENT" },
       };
-      token = "mock-token-user";
+      token = "mock-token-patient";
     }
 
     const response = { data: { access_token: token, user } };
@@ -99,64 +113,32 @@ export const api = {
     if (!token) return Promise.reject({ message: "No token" });
 
     let user: IUser;
+    
+    // 🔐 ADMIN - Toàn quyền
     if (token === "mock-token-admin") {
       user = {
         id: "admin",
         email: "admin@local",
         name: "Admin Demo",
-        role: { id: "admin", name: "Admin" },
-        permissions: [
-          "view_dashboard",
-          "view_profile",
-          "view_records",
-          "view_family",
-          "view_patients",
-          "view_appointments",
-          "view_doctor_appointments",
-          "view_prescriptions",
-          "view_doctors",
-          "create_appointment",
-          "create_prescription",
-          "transfer_record",
-          "create_record",
-          "view_doctor_queue",
-        ],
+        role: { id: "1", name: "ADMIN" },
       };
-    } else if (token === "mock-token-doctor") {
+    } 
+    // 🩺 DOCTOR - Quản lý lịch khám
+    else if (token === "mock-token-doctor") {
       user = {
         id: "doctor",
         email: "doctor@local",
         name: "Bác sĩ Demo",
-        role: { id: "doctor", name: "Doctor" },
-        permissions: [
-          "view_dashboard",
-          "view_profile",
-          "view_patients",
-          "view_doctor_appointments",
-          "view_prescriptions",
-          "view_doctors",
-          "view_doctor_queue",
-          "create_appointment",
-          "create_prescription",
-          "mark_record_viewed",
-        ],
+        role: { id: "2", name: "DOCTOR" },
       };
-    } else {
+    } 
+    // 👤 PATIENT - Người dùng
+    else {
       user = {
-        id: "user",
-        email: "user@local",
-        name: "Người Dùng Demo",
-        role: { id: "user", name: "User" },
-        permissions: [
-          "view_dashboard",
-          "view_profile",
-          "view_records",
-          "view_family",
-          "view_doctors",
-          "create_record",
-          "transfer_record",
-          "view_appointments",
-        ],
+        id: "patient",
+        email: "patient@local",
+        name: "Bệnh Nhân Demo",
+        role: { id: "3", name: "PATIENT" },
       };
     }
     return delay(400, { data: user });
@@ -695,35 +677,53 @@ export const api = {
 
   // Admin: User Management
   _users: [
+    // 🔐 ADMIN - Quản trị viên
     {
       id: "admin",
       email: "admin@local",
       name: "Admin Demo",
       phone: "0900000001",
-      role: { id: "admin", name: "Admin" },
-      permissions: ["view_dashboard", "view_profile", "view_records", "view_family", "view_patients", "view_appointments", "view_doctor_appointments", "view_prescriptions", "view_doctors", "create_appointment", "create_prescription", "transfer_record", "create_record", "view_doctor_queue"],
+      role: { id: "1", name: "ADMIN" },
       status: "active",
       createdAt: "2024-01-01T00:00:00",
     },
+    // 🩺 DOCTOR - Bác sĩ
     {
-      id: "doctor",
-      email: "doctor@local",
-      name: "Bác sĩ Demo",
+      id: "doctor1",
+      email: "doctor1@local",
+      name: "BS. Nguyễn Văn An",
       phone: "0900000002",
-      role: { id: "doctor", name: "Doctor" },
-      permissions: ["view_dashboard", "view_profile", "view_patients", "view_doctor_appointments", "view_prescriptions", "view_doctors", "view_doctor_queue", "create_appointment", "create_prescription", "mark_record_viewed"],
+      role: { id: "2", name: "DOCTOR" },
       status: "active",
       createdAt: "2024-02-01T00:00:00",
     },
     {
-      id: "user",
-      email: "user@local",
-      name: "Người Dùng Demo",
+      id: "doctor2",
+      email: "doctor2@local",
+      name: "BS. Trần Thị Bình",
       phone: "0900000003",
-      role: { id: "user", name: "User" },
-      permissions: ["view_dashboard", "view_profile", "view_records", "view_family", "view_doctors", "create_record", "transfer_record", "view_appointments"],
+      role: { id: "2", name: "DOCTOR" },
+      status: "active",
+      createdAt: "2024-02-15T00:00:00",
+    },
+    // 👤 PATIENT - Bệnh nhân/Người dùng
+    {
+      id: "patient1",
+      email: "patient1@local",
+      name: "Nguyễn Văn A",
+      phone: "0900000004",
+      role: { id: "3", name: "PATIENT" },
       status: "active",
       createdAt: "2024-03-01T00:00:00",
+    },
+    {
+      id: "patient2",
+      email: "patient2@local",
+      name: "Trần Thị B",
+      phone: "0900000005",
+      role: { id: "3", name: "PATIENT" },
+      status: "active",
+      createdAt: "2024-03-15T00:00:00",
     },
   ] as any[],
 
