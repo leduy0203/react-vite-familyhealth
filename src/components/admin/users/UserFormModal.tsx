@@ -1,205 +1,180 @@
-import React, { useState } from "react";
-import { Modal, Form, Input, Select, Checkbox, App, Row, Col } from "antd";
-import type { ISystemUser } from "../../../redux/slice/userSlice";
-
-const { Option } = Select;
+import React from "react";
+import { Modal, Form, Input, Select, Switch, Space, Row, Col } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 
 interface UserFormModalProps {
   open: boolean;
-  user: ISystemUser | null;
-  onClose: () => void;
-  onSave: (user: Partial<ISystemUser>) => Promise<void>;
+  onCancel: () => void;
+  onFinish: (values: any) => void;
+  loading?: boolean;
 }
-
-const ALL_PERMISSIONS = [
-  { value: "view_dashboard", label: "Xem Dashboard" },
-  { value: "view_profile", label: "Xem Profile" },
-  { value: "view_records", label: "Xem Hồ sơ" },
-  { value: "view_family", label: "Xem Gia đình" },
-  { value: "view_patients", label: "Xem Bệnh nhân" },
-  { value: "view_appointments", label: "Xem Lịch hẹn" },
-  { value: "view_doctor_appointments", label: "Xem Lịch bác sĩ" },
-  { value: "view_prescriptions", label: "Xem Đơn thuốc" },
-  { value: "view_doctors", label: "Xem Bác sĩ" },
-  { value: "view_doctor_queue", label: "Xem Hồ sơ bác sĩ" },
-  { value: "create_appointment", label: "Tạo Lịch hẹn" },
-  { value: "create_prescription", label: "Tạo Đơn thuốc" },
-  { value: "transfer_record", label: "Chuyển Hồ sơ" },
-  { value: "create_record", label: "Tạo Hồ sơ" },
-  { value: "mark_record_viewed", label: "Đánh dấu đã xem Hồ sơ" },
-];
-
-const ROLE_PERMISSIONS: Record<string, string[]> = {
-  admin: ALL_PERMISSIONS.map((p) => p.value),
-  doctor: [
-    "view_dashboard",
-    "view_profile",
-    "view_patients",
-    "view_doctor_appointments",
-    "view_prescriptions",
-    "view_doctors",
-    "view_doctor_queue",
-    "create_appointment",
-    "create_prescription",
-    "mark_record_viewed",
-  ],
-  user: [
-    "view_dashboard",
-    "view_profile",
-    "view_records",
-    "view_family",
-    "view_doctors",
-    "create_record",
-    "transfer_record",
-    "view_appointments",
-  ],
-};
 
 const UserFormModal: React.FC<UserFormModalProps> = ({
   open,
-  user,
-  onClose,
-  onSave,
+  onCancel,
+  onFinish,
+  loading = false,
 }) => {
   const [form] = Form.useForm();
-  const { message } = App.useApp();
-  const [loading, setLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState(user?.role.id || "user");
 
-  React.useEffect(() => {
-    if (user) {
-      form.setFieldsValue({
-        ...user,
-        roleId: user.role.id,
-        permissions: user.permissions || [],
-      });
-      setSelectedRole(user.role.id);
-    } else {
-      form.resetFields();
-      form.setFieldsValue({
-        roleId: "user",
-        permissions: ROLE_PERMISSIONS.user,
-        status: "active",
-      });
-      setSelectedRole("user");
-    }
-  }, [user, form, open]);
-
-  const handleRoleChange = (roleId: string) => {
-    setSelectedRole(roleId);
-    form.setFieldsValue({
-      permissions: ROLE_PERMISSIONS[roleId] || [],
-    });
+  const handleCancel = () => {
+    form.resetFields();
+    onCancel();
   };
 
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      setLoading(true);
+  const handleOk = () => {
+    form.submit();
+  };
 
-      const userData: Partial<ISystemUser> = {
-        ...values,
-        role: {
-          id: values.roleId,
-          name:
-            values.roleId === "admin"
-              ? "Admin"
-              : values.roleId === "doctor"
-              ? "Doctor"
-              : "User",
-        },
-      };
-
-      if (user) {
-        userData.id = user.id;
-      }
-
-      await onSave(userData);
-      message.success(user ? "Cập nhật thành công" : "Thêm user thành công");
-      onClose();
-      form.resetFields();
-    } catch (error) {
-      message.error("Có lỗi xảy ra");
-    } finally {
-      setLoading(false);
-    }
+  const handleFinish = (values: any) => {
+    onFinish(values);
+    form.resetFields();
   };
 
   return (
     <Modal
+      title={
+        <Space>
+          <PlusOutlined />
+          <span>Thêm người dùng mới</span>
+        </Space>
+      }
       open={open}
-      title={user ? "Sửa người dùng" : "Thêm người dùng mới"}
-      onCancel={onClose}
-      onOk={handleSubmit}
-      confirmLoading={loading}
-      width={700}
-      okText={user ? "Cập nhật" : "Thêm"}
+      onCancel={handleCancel}
+      onOk={handleOk}
+      width={600}
+      okText="Thêm người dùng"
       cancelText="Hủy"
+      confirmLoading={loading}
+      maskClosable={false}
     >
-      <Form form={form} layout="vertical">
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleFinish}
+        style={{ marginTop: 20 }}
+      >
+        {/* Số điện thoại */}
         <Row gutter={16}>
-          <Col span={12}>
+          <Col span={24}>
             <Form.Item
-              name="name"
-              label="Họ tên"
-              rules={[{ required: true, message: "Vui lòng nhập họ tên" }]}
-            >
-              <Input placeholder="Nhập họ tên" />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              name="email"
-              label="Email"
+              label="Số điện thoại"
+              name="phone"
               rules={[
-                { required: true, message: "Vui lòng nhập email" },
-                { type: "email", message: "Email không hợp lệ" },
+                { required: true, message: "Vui lòng nhập số điện thoại!" },
+                {
+                  pattern: /^[0-9]{10}$/,
+                  message: "Số điện thoại phải có 10 chữ số!",
+                },
               ]}
             >
-              <Input placeholder="Nhập email" />
+              <Input placeholder="0987654321" />
             </Form.Item>
           </Col>
         </Row>
 
+        {/* Mật khẩu */}
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="phone" label="Số điện thoại">
-              <Input placeholder="Nhập số điện thoại" />
+            <Form.Item
+              label="Mật khẩu"
+              name="password"
+              rules={[
+                { required: true, message: "Vui lòng nhập mật khẩu!" },
+                {
+                  min: 6,
+                  message: "Mật khẩu phải có ít nhất 6 ký tự!",
+                },
+              ]}
+            >
+              <Input.Password placeholder="Nhập mật khẩu" />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
-              name="roleId"
-              label="Vai trò"
-              rules={[{ required: true, message: "Vui lòng chọn vai trò" }]}
+              label="Xác nhận mật khẩu"
+              name="confirmPassword"
+              dependencies={["password"]}
+              rules={[
+                { required: true, message: "Vui lòng xác nhận mật khẩu!" },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue("password") === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(
+                      new Error("Mật khẩu xác nhận không khớp!")
+                    );
+                  },
+                }),
+              ]}
             >
-              <Select placeholder="Chọn vai trò" onChange={handleRoleChange}>
-                <Option value="user">Người dùng</Option>
-                <Option value="doctor">Bác sĩ</Option>
-                <Option value="admin">Admin</Option>
+              <Input.Password placeholder="Nhập lại mật khẩu" />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        {/* Vai trò */}
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Vai trò"
+              name="role_id"
+              rules={[{ required: true, message: "Vui lòng chọn vai trò!" }]}
+              initialValue={3}
+            >
+              <Select placeholder="Chọn vai trò">
+                <Select.Option value={1}>
+                  <span style={{ color: "#ff4d4f", fontWeight: 600 }}>
+                    ADMIN
+                  </span>
+                </Select.Option>
+                <Select.Option value={3}>
+                  <span style={{ color: "#52c41a", fontWeight: 600 }}>
+                    PATIENT
+                  </span>
+                </Select.Option>
               </Select>
             </Form.Item>
           </Col>
+
+          {/* Trạng thái */}
+          <Col span={12}>
+            <Form.Item
+              label="Trạng thái"
+              name="isActive"
+              valuePropName="checked"
+              initialValue={true}
+            >
+              <Switch
+                checkedChildren="Hoạt động"
+                unCheckedChildren="Khóa"
+                style={{ width: "100%" }}
+              />
+            </Form.Item>
+          </Col>
         </Row>
 
-        <Form.Item name="status" label="Trạng thái">
-          <Select>
-            <Option value="active">Hoạt động</Option>
-            <Option value="inactive">Không hoạt động</Option>
-          </Select>
-        </Form.Item>
-
-        <Form.Item name="permissions" label="Quyền hạn">
-          <Checkbox.Group style={{ width: "100%" }}>
-            <Row gutter={[8, 8]}>
-              {ALL_PERMISSIONS.map((perm) => (
-                <Col span={12} key={perm.value}>
-                  <Checkbox value={perm.value}>{perm.label}</Checkbox>
-                </Col>
-              ))}
-            </Row>
-          </Checkbox.Group>
-        </Form.Item>
+        {/* Note */}
+        <div
+          style={{
+            padding: "12px",
+            background: "#f0f2f5",
+            borderRadius: 6,
+            fontSize: 13,
+            color: "#666",
+          }}
+        >
+          <strong>Lưu ý:</strong>
+          <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
+            <li>
+              Bác sĩ được quản lý ở trang{" "}
+              <strong style={{ color: "#1890ff" }}>Quản lý bác sĩ</strong>
+            </li>
+            <li>Mật khẩu phải nhập 2 lần để xác nhận</li>
+            <li>Số điện thoại phải là duy nhất trong hệ thống</li>
+          </ul>
+        </div>
       </Form>
     </Modal>
   );

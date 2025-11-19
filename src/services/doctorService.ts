@@ -9,7 +9,7 @@ export const doctorService = {
   async getList(params?: DoctorListParams): Promise<DoctorListResponse> {
     try {
       const response = await axiosInstance.get<DoctorListResponse>(
-        "/doctors",
+        "/doctors/getAll",
         { params }
       );
       return response.data;

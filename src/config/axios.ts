@@ -17,6 +17,11 @@ instance.interceptors.request.use(
       if (!config.headers) (config as any).headers = {};
       (config.headers as any).Authorization = `Bearer ${token}`;
     }
+    
+    // Debug CORS
+    console.log("🔵 Request:", config.method?.toUpperCase(), config.url);
+    console.log("🔑 Token:", token ? "Present" : "None");
+    
     return config;
   },
   (error) => Promise.reject(error)
@@ -24,8 +29,16 @@ instance.interceptors.request.use(
 
 // Simple response interceptor to handle 401 (unauthorized)
 instance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log("✅ Response:", response.status, response.config.url);
+    return response;
+  },
   (error) => {
+    console.error("❌ Error:", error.message);
+    console.error("   URL:", error.config?.url);
+    console.error("   Status:", error.response?.status);
+    console.error("   CORS:", error.message.includes("CORS") ? "YES - Check backend!" : "NO");
+    
     const status = error?.response?.status;
     if (status === 401) {
       // clear token and redux state, redirect to login

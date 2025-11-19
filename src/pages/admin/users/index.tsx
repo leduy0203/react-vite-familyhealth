@@ -16,18 +16,10 @@ import {
   HomeOutlined,
   TeamOutlined,
   PlusOutlined,
-  EditOutlined,
   DeleteOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import {
-  fetchUsers,
-  createUser,
-  updateUser,
-  deleteUser,
-  type ISystemUser,
-} from "../../../redux/slice/userSlice";
+import { userService, type IUserNew, type CreateUserDTO } from "../../../services/userService";
 import UserFormModal from "../../../components/admin/users/UserFormModal";
 import type { ColumnsType } from "antd/es/table";
 
@@ -35,133 +27,151 @@ const { Title } = Typography;
 
 const UsersPage: React.FC = () => {
   const { message } = App.useApp();
-  const dispatch = useAppDispatch();
-  const { list, loading } = useAppSelector((s) => s.user);
+  const [users, setUsers] = useState<IUserNew[]>([]);
+  const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<ISystemUser | null>(null);
   const [searchText, setSearchText] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await userService.getList({
+        page: currentPage - 1,
+        size: pageSize,
+      });
+      setUsers(response.data.result);
+      setTotal(response.data.meta.total);
+    } catch (error: any) {
+      message.error(error.message || "Lỗi khi tải danh sách người dùng");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    dispatch(fetchUsers());
-  }, [dispatch]);
+    fetchUsers();
+  }, [currentPage, pageSize]);
 
   const handleAdd = () => {
-    setSelectedUser(null);
     setModalOpen(true);
   };
 
-  const handleEdit = (user: ISystemUser) => {
-    setSelectedUser(user);
-    setModalOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     try {
-      await dispatch(deleteUser(id)).unwrap();
-      message.success("Xóa user thành công");
-    } catch (error) {
-      message.error("Xóa thất bại");
+      await userService.delete(id);
+      message.success("Thay đổi trạng thái thành công");
+      fetchUsers(); // Reload
+    } catch (error: any) {
+      message.error(error.message || "Lỗi khi thay đổi trạng thái");
     }
   };
 
-  const handleSave = async (userData: Partial<ISystemUser>) => {
-    if (selectedUser) {
-      await dispatch(updateUser({ ...selectedUser, ...userData } as ISystemUser)).unwrap();
-    } else {
-      await dispatch(createUser(userData)).unwrap();
+  const handleFinish = async (values: any) => {
+    try {
+      const createData: CreateUserDTO = {
+        phone: values.phone,
+        password: values.password,
+        role_id: values.role_id,
+        isActive: values.isActive,
+      };
+      await userService.create(createData);
+      message.success("Thêm người dùng thành công");
+      setModalOpen(false);
+      fetchUsers(); // Reload
+    } catch (error: any) {
+      message.error(error.message || "Lỗi khi thêm người dùng");
     }
   };
 
-  const getRoleTag = (role: { id: string; name: string }) => {
-    const colors: Record<string, string> = {
-      admin: "red",
-      doctor: "blue",
-      user: "green",
-    };
-    return <Tag color={colors[role.id] || "default"}>{role.name}</Tag>;
+  const getRoleTag = (roleName: string) => {
+    if (roleName === "ADMIN") return <Tag color="red">ADMIN</Tag>;
+    if (roleName === "DOCTOR") return <Tag color="blue">DOCTOR</Tag>;
+    return <Tag color="green">PATIENT</Tag>;
   };
 
-  const getStatusTag = (status: string) => {
-    return status === "active" ? (
+  const getStatusTag = (active: number) => {
+    return active === 1 ? (
       <Tag color="success">Hoạt động</Tag>
     ) : (
-      <Tag color="default">Không hoạt động</Tag>
+      <Tag color="default">Khóa</Tag>
     );
   };
 
   // Filter users
-  const filteredUsers = list.filter((user) => {
+  const filteredUsers = users.filter((user) => {
     const matchesSearch =
       !searchText ||
-      user.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchText.toLowerCase());
+      (user.fullName && user.fullName.toLowerCase().includes(searchText.toLowerCase())) ||
+      (user.email && user.email.toLowerCase().includes(searchText.toLowerCase())) ||
+      user.phone.includes(searchText);
     
-    const matchesRole = roleFilter === "all" || user.role.id === roleFilter;
+    const matchesRole = roleFilter === "all" || user.roleName === roleFilter;
 
     return matchesSearch && matchesRole;
   });
 
-  const columns: ColumnsType<ISystemUser> = [
+  const columns: ColumnsType<IUserNew> = [
     {
       title: "Họ tên",
-      dataIndex: "name",
-      key: "name",
-      render: (text: string) => <Typography.Text strong>{text}</Typography.Text>,
+      dataIndex: "fullName",
+      key: "fullName",
+      render: (text: string) => (
+        <Typography.Text strong>
+          {text && text !== "N/A" ? text : <span style={{ color: "#999" }}>—</span>}
+        </Typography.Text>
+      ),
     },
     {
       title: "Email",
       dataIndex: "email",
       key: "email",
+      render: (text: string) => text || <span style={{ color: "#999" }}>—</span>,
     },
     {
       title: "Số điện thoại",
       dataIndex: "phone",
       key: "phone",
-      render: (text: string) => text || "—",
     },
     {
       title: "Vai trò",
-      dataIndex: "role",
-      key: "role",
+      dataIndex: "roleName",
+      key: "roleName",
       align: "center",
-      render: (role: { id: string; name: string }) => getRoleTag(role),
+      render: (roleName: string) => getRoleTag(roleName),
     },
     {
       title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
+      dataIndex: "active",
+      key: "active",
       align: "center",
-      render: (status: string) => getStatusTag(status),
+      render: (active: number) => getStatusTag(active),
     },
     {
       title: "Hành động",
       key: "action",
       align: "center",
-      width: 150,
-      render: (_: any, record: ISystemUser) => (
-        <Space>
-          <Button
-            type="primary"
-            ghost
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
+      width: 120,
+      render: (_: any, record: IUserNew) => (
+        <Popconfirm
+          title={record.active === 1 ? "Khóa người dùng?" : "Mở khóa người dùng?"}
+          description={record.active === 1 ? "Người dùng sẽ không thể đăng nhập" : "Người dùng có thể đăng nhập lại"}
+          onConfirm={() => handleDelete(record.id)}
+          okText="Xác nhận"
+          cancelText="Hủy"
+        >
+          <Button 
+            danger={record.active === 1} 
+            type={record.active === 1 ? "primary" : "default"}
+            size="small" 
+            icon={<DeleteOutlined />}
           >
-            Sửa
+            {record.active === 1 ? "Khóa" : "Mở"}
           </Button>
-          <Popconfirm
-            title="Xác nhận xóa?"
-            description="Bạn có chắc muốn xóa user này?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Xóa"
-            cancelText="Hủy"
-          >
-            <Button danger size="small" icon={<DeleteOutlined />}>
-              Xóa
-            </Button>
-          </Popconfirm>
-        </Space>
+        </Popconfirm>
       ),
     },
   ];
@@ -209,11 +219,11 @@ const UsersPage: React.FC = () => {
         <Space style={{ marginBottom: 16, width: "100%", justifyContent: "space-between" }}>
           <Space>
             <Input
-              placeholder="Tìm kiếm theo tên, email..."
+              placeholder="Tìm kiếm theo họ tên, email, SĐT..."
               prefix={<SearchOutlined />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              style={{ width: 250 }}
+              style={{ width: 280 }}
               allowClear
             />
             <Select
@@ -223,9 +233,8 @@ const UsersPage: React.FC = () => {
               onChange={setRoleFilter}
             >
               <Select.Option value="all">Tất cả</Select.Option>
-              <Select.Option value="admin">Admin</Select.Option>
-              <Select.Option value="doctor">Bác sĩ</Select.Option>
-              <Select.Option value="user">Người dùng</Select.Option>
+              <Select.Option value="ADMIN">Admin</Select.Option>
+              <Select.Option value="PATIENT">Patient</Select.Option>
             </Select>
           </Space>
           <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
@@ -240,9 +249,15 @@ const UsersPage: React.FC = () => {
           dataSource={filteredUsers}
           loading={loading}
           pagination={{
-            pageSize: 10,
+            current: currentPage,
+            pageSize: pageSize,
+            total: total,
             showSizeChanger: true,
             showTotal: (total) => `Tổng số ${total} người dùng`,
+            onChange: (page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            },
           }}
         />
       </Card>
@@ -250,9 +265,9 @@ const UsersPage: React.FC = () => {
       {/* Modal */}
       <UserFormModal
         open={modalOpen}
-        user={selectedUser}
-        onClose={() => setModalOpen(false)}
-        onSave={handleSave}
+        onCancel={() => setModalOpen(false)}
+        onFinish={handleFinish}
+        loading={loading}
       />
     </div>
   );
