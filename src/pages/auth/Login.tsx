@@ -19,6 +19,8 @@ const Login: React.FC = () => {
       const res = await api.login(values.username, values.password);
       if (res && res.data) {
         localStorage.setItem("access_token", res.data.access_token);
+        localStorage.setItem("user_id", res.data.user.id);
+        localStorage.setItem("user_info", JSON.stringify(res.data.user));
         dispatch(setUserLoginInfo(res.data.user));
         message.success("Đăng nhập thành công");
         navigate("/");

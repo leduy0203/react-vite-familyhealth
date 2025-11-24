@@ -43,6 +43,8 @@ instance.interceptors.response.use(
     if (status === 401) {
       // clear token and redux state, redirect to login
       localStorage.removeItem("access_token");
+      localStorage.removeItem("user_id");
+      localStorage.removeItem("user_info");
       try {
         store.dispatch(setLogoutAction());
       } catch (e) {
