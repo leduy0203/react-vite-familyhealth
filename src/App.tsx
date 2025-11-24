@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { App as AntApp } from "antd";
 import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import ProtectedRoute from "./components/share/ProtectedRoute";
 import PermissionRoute from "./components/share/PermissionRoute";
@@ -21,6 +22,7 @@ function App() {
     <AntApp>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
         <Route
