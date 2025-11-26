@@ -5,7 +5,7 @@ import { FaHeartbeat } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../../redux/hooks";
 import { setUserLoginInfo } from "../../redux/slice/accountSlice";
-import { api } from "../../config/api";
+import { authService } from "../../services/authService";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -16,19 +16,66 @@ const Login: React.FC = () => {
   const onFinish = async (values: any) => {
     setLoading(true);
     try {
-      const res = await api.login(values.username, values.password);
-      if (res && res.data) {
-        localStorage.setItem("access_token", res.data.access_token);
-        localStorage.setItem("user_id", res.data.user.id);
-        localStorage.setItem("user_info", JSON.stringify(res.data.user));
-        dispatch(setUserLoginInfo(res.data.user));
-        message.success("Đăng nhập thành công");
+      console.log("🔐 Starting login...", values);
+      
+      // Call authentication service
+      const res = await authService.login({
+        phone: values.username,
+        password: values.password,
+      });
+      
+      console.log("✅ Login response:", res);
+      
+      if (res && res.code === 200 && res.data) {
+        console.log("💾 Storing tokens...");
+        // Store tokens and userId
+        authService.setTokens(
+          res.data.accessToken,
+          res.data.refreshToken,
+          res.data.userId
+        );
+        
+        console.log("👤 Fetching user profile...");
+        // Fetch user profile to get full user info
+        try {
+          const profileRes = await authService.getProfile();
+          console.log("✅ Profile response:", profileRes);
+          
+          if (profileRes && profileRes.data) {
+            const userData = profileRes.data;
+            // Transform backend data to match IUser interface
+            const userInfo = {
+              id: userData.id,
+              email: userData.email || '',
+              name: userData.fullName,
+              phone: userData.phone,
+              role: { id: '', name: userData.roleName },
+            };
+            console.log("💾 Setting user info:", userInfo);
+            authService.setUserInfo(userInfo);
+            dispatch(setUserLoginInfo(userInfo));
+            console.log("✅ User info dispatched to Redux");
+          }
+        } catch (profileErr) {
+          console.error("❌ Failed to fetch profile:", profileErr);
+          // Even if profile fetch fails, still navigate to dashboard
+          // User can view limited info from token
+        }
+        
+        console.log("🚀 Navigating to dashboard...");
+        message.success(res.message || "Đăng nhập thành công");
         navigate("/");
+        console.log("✅ Navigate called");
+      } else {
+        console.warn("⚠️ Invalid response:", res);
+        message.error("Đăng nhập thất bại - Response không hợp lệ");
       }
     } catch (err: any) {
+      console.error("❌ Login error:", err);
       message.error(err?.message || "Đăng nhập thất bại");
     } finally {
       setLoading(false);
+      console.log("🏁 Login process finished");
     }
   };
 
@@ -94,15 +141,19 @@ const Login: React.FC = () => {
           requiredMark={false}
         >
           <Form.Item
-            label={<span style={{ fontSize: 14, fontWeight: 500 }}>Email</span>}
+            label={<span style={{ fontSize: 14, fontWeight: 500 }}>Số điện thoại</span>}
             name="username"
-            rules={[{ required: true, message: "Vui lòng nhập email" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập số điện thoại" },
+              { pattern: /^[0-9]{10,11}$/, message: "Số điện thoại không hợp lệ" }
+            ]}
             style={{ marginBottom: 20 }}
           >
             <Input
               prefix={<UserOutlined style={{ color: "#cbd5e0" }} />}
-              placeholder="email@example.com"
+              placeholder="0123456789"
               style={{ height: 48 }}
+              maxLength={11}
             />
           </Form.Item>
           <Form.Item

@@ -17,7 +17,7 @@ const Register: React.FC = () => {
       const payload = {
         phone: values.phone,
         password: values.password,
-        roleId: 3, // PATIENT
+        roleId: 4, // PATIENT_HOUSEHOLD - User đăng ký từ form sẽ là chủ hộ
         isActive: true,
         memberInfo: {
           fullName: values.fullName,
@@ -87,7 +87,7 @@ const Register: React.FC = () => {
                 margin: 0,
               }}
             >
-              Tạo tài khoản bệnh nhân mới
+              Tạo tài khoản chủ hộ gia đình
             </p>
           </Space>
         </div>

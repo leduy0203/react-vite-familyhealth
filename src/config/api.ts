@@ -1,9 +1,10 @@
-// Simple fake API to simulate backend for development
+// Mock API for development (legacy code)
+// Note: Authentication moved to src/services/authService.ts
 
 import type { IDoctor } from "../types/health";
 
 /**
- * 🔐 HỆ THỐNG PHÂN QUYỀN THEO 3 ROLES
+ * 🔐 HỆ THỐNG PHÂN QUYỀN THEO 4 ROLES
  * 
  * ============================================
  * 1️⃣ ADMIN - Quản trị viên
@@ -33,24 +34,39 @@ import type { IDoctor } from "../types/health";
  *    - Quản lý bệnh nhân của mình
  * 
  * ============================================
- * 3️⃣ PATIENT - Bệnh nhân/Người dùng
+ * 3️⃣ PATIENT - Bệnh nhân/Thành viên gia đình
  * ============================================
  * 📊 Menu:
  *    - Dashboard (/)
- *    - Thành viên (/family)
  *    - Lịch hẹn (/appointments)
  *    - Danh sách bác sĩ (/doctors)
  *    - Kết quả khám (/history)
  * 
  * 🎯 Chức năng:
  *    - Xem dashboard cá nhân
- *    - Quản lý thành viên gia đình
- *    - Đặt lịch khám bệnh
+ *    - Xem lịch hẹn của mình
  *    - Tìm kiếm bác sĩ
  *    - Xem kết quả khám bệnh
+ * 
+ * ============================================
+ * 4️⃣ PATIENT_HOUSEHOLD - Chủ hộ gia đình
+ * ============================================
+ * 📊 Menu:
+ *    - Dashboard (/)
+ *    - Thành viên (/family) ⭐ Có thêm
+ *    - Lịch hẹn (/appointments)
+ *    - Danh sách bác sĩ (/doctors)
+ *    - Kết quả khám (/history)
+ * 
+ * 🎯 Chức năng:
+ *    - Xem dashboard cá nhân
+ *    - Quản lý thành viên gia đình (CRUD) ⭐
+ *    - Đặt lịch khám cho thành viên ⭐
+ *    - Tìm kiếm bác sĩ
+ *    - Xem kết quả khám của cả gia đình
  * ============================================
  */
-export type UserRole = "ADMIN" | "DOCTOR" | "PATIENT";
+export type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "PATIENT_HOUSEHOLD";
 
 export interface IUser {
   id: string;
@@ -64,85 +80,7 @@ function delay<T>(ms: number, value: T): Promise<T> {
 }
 
 export const api = {
-  login: async (username: string, password: string) => {
-    // very simple fake validation
-    if (!username || !password) {
-      return Promise.reject({ message: "Username and password required" });
-    }
-    const uname = username.toLowerCase();
-    let user: IUser;
-    let token = "mock-token-user";
-
-    // 🔐 ADMIN Role - Quản trị toàn bộ hệ thống
-    if (uname.includes("admin")) {
-      user = {
-        id: "admin",
-        email: username,
-        name: "Admin Demo",
-        role: { id: "1", name: "ADMIN" },
-      };
-      token = "mock-token-admin";
-    } 
-    // 🩺 DOCTOR Role - Bác sĩ quản lý lịch khám
-    else if (uname.includes("doctor")) {
-      user = {
-        id: "doctor",
-        email: username,
-        name: "Bác sĩ Demo",
-        role: { id: "2", name: "DOCTOR" },
-      };
-      token = "mock-token-doctor";
-    } 
-    // 👤 PATIENT Role - Người dùng/Bệnh nhân
-    else {
-      user = {
-        id: "user",
-        email: username,
-        name: "Người Dùng Demo",
-        role: { id: "3", name: "PATIENT" },
-      };
-      token = "mock-token-patient";
-    }
-
-    const response = { data: { access_token: token, user } };
-    return delay(600, response);
-  },
-
-  getProfile: async () => {
-    const token = localStorage.getItem("access_token");
-    if (!token) return Promise.reject({ message: "No token" });
-
-    let user: IUser;
-    
-    // 🔐 ADMIN - Toàn quyền
-    if (token === "mock-token-admin") {
-      user = {
-        id: "admin",
-        email: "admin@local",
-        name: "Admin Demo",
-        role: { id: "1", name: "ADMIN" },
-      };
-    } 
-    // 🩺 DOCTOR - Quản lý lịch khám
-    else if (token === "mock-token-doctor") {
-      user = {
-        id: "doctor",
-        email: "doctor@local",
-        name: "Bác sĩ Demo",
-        role: { id: "2", name: "DOCTOR" },
-      };
-    } 
-    // 👤 PATIENT - Người dùng
-    else {
-      user = {
-        id: "patient",
-        email: "patient@local",
-        name: "Bệnh Nhân Demo",
-        role: { id: "3", name: "PATIENT" },
-      };
-    }
-    return delay(400, { data: user });
-  },
+  // Note: login() and getProfile() moved to authService.ts
 
   fetchRecords: async () => {
     const records = [

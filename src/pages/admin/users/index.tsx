@@ -19,7 +19,7 @@ import {
   DeleteOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import { userService, type IUserNew, type CreateUserDTO } from "../../../services/userService";
+import { userService, type IUserNew } from "../../../services/userService";
 import UserFormModal from "../../../components/admin/users/UserFormModal";
 import type { ColumnsType } from "antd/es/table";
 
@@ -72,12 +72,25 @@ const UsersPage: React.FC = () => {
 
   const handleFinish = async (values: any) => {
     try {
-      const createData: CreateUserDTO = {
+      const createData: any = {
         phone: values.phone,
         password: values.password,
-        role_id: values.role_id,
+        roleId: values.role_id, // Changed from role_id to roleId
         isActive: values.isActive,
       };
+
+      // Nếu là PATIENT_HOUSEHOLD thì thêm memberInfo
+      if (values.role_id === 4) {
+        createData.memberInfo = {
+          fullName: values.fullName,
+          address: values.address,
+          gender: values.gender,
+          dateOfBirth: values.dateOfBirth.format("YYYY-MM-DD"),
+          cccd: values.cccd,
+          bhyt: values.bhyt || null,
+        };
+      }
+
       await userService.create(createData);
       message.success("Thêm người dùng thành công");
       setModalOpen(false);
@@ -90,7 +103,8 @@ const UsersPage: React.FC = () => {
   const getRoleTag = (roleName: string) => {
     if (roleName === "ADMIN") return <Tag color="red">ADMIN</Tag>;
     if (roleName === "DOCTOR") return <Tag color="blue">DOCTOR</Tag>;
-    return <Tag color="green">PATIENT</Tag>;
+    if (roleName === "PATIENT_HOUSEHOLD") return <Tag color="green">CHỦ HỘ</Tag>;
+    return <Tag color="cyan">PATIENT</Tag>;
   };
 
   const getStatusTag = (active: number) => {
@@ -228,12 +242,13 @@ const UsersPage: React.FC = () => {
             />
             <Select
               placeholder="Lọc theo vai trò"
-              style={{ width: 150 }}
+              style={{ width: 180 }}
               value={roleFilter}
               onChange={setRoleFilter}
             >
               <Select.Option value="all">Tất cả</Select.Option>
               <Select.Option value="ADMIN">Admin</Select.Option>
+              <Select.Option value="PATIENT_HOUSEHOLD">Chủ hộ</Select.Option>
               <Select.Option value="PATIENT">Patient</Select.Option>
             </Select>
           </Space>

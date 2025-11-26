@@ -17,6 +17,7 @@ import { FaStethoscope, FaHeartbeat } from "react-icons/fa";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setLogoutAction } from "../../redux/slice/accountSlice";
+import { authService } from "../../services/authService";
 import "../../styles/layout.scss";
 import { hasRole } from "../../config/permissions";
 
@@ -41,8 +42,8 @@ const DashboardLayout: React.FC = () => {
     return ["1"];
   }, [location.pathname]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
+  const handleLogout = async () => {
+    await authService.logout();
     dispatch(setLogoutAction());
     navigate("/login");
   };
@@ -156,8 +157,8 @@ const DashboardLayout: React.FC = () => {
                 ]
               : []),
 
-            // Patient Menu - Hiển thị cho PATIENT
-            ...(hasRole(user, "PATIENT")
+            // Patient Menu - Hiển thị cho PATIENT và PATIENT_HOUSEHOLD
+            ...(hasRole(user, ["PATIENT", "PATIENT_HOUSEHOLD"])
               ? [
                   {
                     key: "1",

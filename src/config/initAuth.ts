@@ -1,34 +1,35 @@
-import { api } from "./api";
+import { authService } from "../services/authService";
 import { store } from "../redux/store";
 import { setUserLoginInfo, setLogoutAction } from "../redux/slice/accountSlice";
 
 export async function initAuth() {
-  const token = localStorage.getItem("access_token");
-  if (!token) return;
+  if (!authService.isAuthenticated()) return;
   
   // Thử lấy user info từ localStorage trước (nhanh hơn)
-  const userInfoStr = localStorage.getItem("user_info");
-  if (userInfoStr) {
-    try {
-      const userInfo = JSON.parse(userInfoStr);
-      store.dispatch(setUserLoginInfo(userInfo));
-    } catch (e) {
-      // Parse error, will fetch from API below
-    }
+  const userInfo = authService.getUserInfo();
+  if (userInfo) {
+    store.dispatch(setUserLoginInfo(userInfo));
   }
   
   // Vẫn gọi API để đảm bảo data mới nhất
   try {
-    const res = await api.getProfile();
+    const res = await authService.getProfile();
     if (res && res.data) {
-      localStorage.setItem("user_info", JSON.stringify(res.data));
-      store.dispatch(setUserLoginInfo(res.data));
+      const userData = res.data;
+      // Transform backend data to match IUser interface
+      const userInfo = {
+        id: userData.id,
+        email: userData.email || '',
+        name: userData.fullName,
+        phone: userData.phone,
+        role: { id: '', name: userData.roleName },
+      };
+      authService.setUserInfo(userInfo);
+      store.dispatch(setUserLoginInfo(userInfo));
     }
   } catch (err) {
-    // invalid token or error -> clear
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("user_id");
-    localStorage.removeItem("user_info");
+    // invalid token or error -> logout
+    await authService.logout();
     store.dispatch(setLogoutAction());
   }
 }

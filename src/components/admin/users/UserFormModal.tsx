@@ -1,6 +1,6 @@
-import React from "react";
-import { Modal, Form, Input, Select, Switch, Space, Row, Col } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import React, { useState } from "react";
+import { Modal, Form, Input, Select, Switch, Space, Row, Col, DatePicker } from "antd";
+import { PlusOutlined, IdcardOutlined } from "@ant-design/icons";
 
 interface UserFormModalProps {
   open: boolean;
@@ -16,6 +16,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
   loading = false,
 }) => {
   const [form] = Form.useForm();
+  const [selectedRole, setSelectedRole] = useState<number>(4);
 
   const handleCancel = () => {
     form.resetFields();
@@ -121,17 +122,20 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
               label="Vai trò"
               name="role_id"
               rules={[{ required: true, message: "Vui lòng chọn vai trò!" }]}
-              initialValue={3}
+              initialValue={4}
             >
-              <Select placeholder="Chọn vai trò">
+              <Select 
+                placeholder="Chọn vai trò"
+                onChange={(value) => setSelectedRole(value)}
+              >
                 <Select.Option value={1}>
                   <span style={{ color: "#ff4d4f", fontWeight: 600 }}>
                     ADMIN
                   </span>
                 </Select.Option>
-                <Select.Option value={3}>
+                <Select.Option value={4}>
                   <span style={{ color: "#52c41a", fontWeight: 600 }}>
-                    PATIENT
+                    PATIENT_HOUSEHOLD (Chủ hộ)
                   </span>
                 </Select.Option>
               </Select>
@@ -155,6 +159,110 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
           </Col>
         </Row>
 
+        {/* Thông tin cá nhân - Chỉ hiển thị khi chọn PATIENT_HOUSEHOLD */}
+        {selectedRole === 4 && (
+          <>
+            <div style={{ 
+              borderTop: "1px solid #f0f0f0", 
+              marginTop: 16, 
+              paddingTop: 16,
+              marginBottom: 8 
+            }}>
+              <strong style={{ fontSize: 14, color: "#1890ff" }}>
+                📋 Thông tin chủ hộ gia đình
+              </strong>
+            </div>
+
+            <Row gutter={16}>
+              <Col span={24}>
+                <Form.Item
+                  label="Họ và tên"
+                  name="fullName"
+                  rules={[{ required: true, message: "Vui lòng nhập họ tên!" }]}
+                >
+                  <Input placeholder="Nguyễn Văn A" />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Giới tính"
+                  name="gender"
+                  rules={[{ required: true, message: "Vui lòng chọn giới tính!" }]}
+                >
+                  <Select placeholder="Chọn giới tính">
+                    <Select.Option value="MALE">Nam</Select.Option>
+                    <Select.Option value="FEMALE">Nữ</Select.Option>
+                    <Select.Option value="OTHER">Khác</Select.Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Ngày sinh"
+                  name="dateOfBirth"
+                  rules={[{ required: true, message: "Vui lòng chọn ngày sinh!" }]}
+                >
+                  <DatePicker
+                    style={{ width: "100%" }}
+                    placeholder="Chọn ngày sinh"
+                    format="DD/MM/YYYY"
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={24}>
+                <Form.Item
+                  label="Địa chỉ"
+                  name="address"
+                  rules={[{ required: true, message: "Vui lòng nhập địa chỉ!" }]}
+                >
+                  <Input.TextArea
+                    rows={2}
+                    placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Số CCCD/CMND"
+                  name="cccd"
+                  rules={[
+                    { required: true, message: "Vui lòng nhập CCCD!" },
+                    { pattern: /^[0-9]{9,12}$/, message: "CCCD phải có 9-12 chữ số!" },
+                  ]}
+                >
+                  <Input
+                    prefix={<IdcardOutlined />}
+                    placeholder="001234567890"
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Số BHYT (tùy chọn)"
+                  name="bhyt"
+                  rules={[
+                    { pattern: /^[0-9]{10,15}$/, message: "BHYT phải có 10-15 chữ số!" },
+                  ]}
+                >
+                  <Input
+                    prefix={<IdcardOutlined />}
+                    placeholder="066204001282"
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </>
+        )}
+
         {/* Note */}
         <div
           style={{
@@ -163,15 +271,18 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
             borderRadius: 6,
             fontSize: 13,
             color: "#666",
+            marginTop: 16,
           }}
         >
           <strong>Lưu ý:</strong>
           <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
             <li>
-              Bác sĩ được quản lý ở trang{" "}
-              <strong style={{ color: "#1890ff" }}>Quản lý bác sĩ</strong>
+              <strong>ADMIN</strong>: Chỉ cần số điện thoại và mật khẩu
             </li>
-            <li>Mật khẩu phải nhập 2 lần để xác nhận</li>
+            <li>
+              <strong>PATIENT_HOUSEHOLD</strong>: Cần đầy đủ thông tin cá nhân (chủ hộ gia đình)
+            </li>
+            <li>Bác sĩ được quản lý ở trang <strong style={{ color: "#1890ff" }}>Quản lý bác sĩ</strong></li>
             <li>Số điện thoại phải là duy nhất trong hệ thống</li>
           </ul>
         </div>

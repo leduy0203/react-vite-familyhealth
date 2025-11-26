@@ -25,7 +25,7 @@ export const doctorService = {
   },
 
   async create(data: any): Promise<{ code: number; message: string }> {
-    const response = await axiosInstance.post("/doctors", data);
+    const response = await axiosInstance.post("/doctors/create", data);
     return response.data;
   },
 };

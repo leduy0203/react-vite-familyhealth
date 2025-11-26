@@ -2,14 +2,15 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
 // Define a type for the user information
-interface IUser {
-  id: string;
+export interface IUser {
+  id: string | number;
   email: string;
   name: string;
+  phone?: string;
   role: {
     id: string;
     name: string;
-  };
+  } | string; // Support both old format and new backend format
   // permissions: list of permission keys allowed for this user
   permissions?: string[];
 }
@@ -27,6 +28,7 @@ const initialState: IAccountState = {
     id: "",
     email: "",
     name: "",
+    phone: "",
     role: { id: "", name: "" },
     permissions: [],
   },

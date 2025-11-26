@@ -34,8 +34,16 @@ export interface UserListParams {
 export interface CreateUserDTO {
   phone: string;
   password: string;
-  role_id: number; // 1 = Admin, 3 = Patient
+  roleId: number; // 1 = Admin, 4 = Patient_Household
   isActive: boolean;
+  memberInfo?: {
+    fullName: string;
+    address: string;
+    gender: "MALE" | "FEMALE" | "OTHER";
+    dateOfBirth: string; // YYYY-MM-DD
+    cccd: string;
+    bhyt?: string | null;
+  };
 }
 
 export const userService = {

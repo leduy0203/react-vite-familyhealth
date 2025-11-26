@@ -36,11 +36,11 @@ function App() {
           <Route index element={<DashboardPage />} />
           <Route path="account/profile" element={<ProfilePage />} />
           
-          {/* PATIENT Routes */}
+          {/* PATIENT & PATIENT_HOUSEHOLD Routes */}
           <Route
             path="appointments"
             element={
-              <PermissionRoute role="PATIENT">
+              <PermissionRoute role={["PATIENT", "PATIENT_HOUSEHOLD"]}>
                 <AppointmentsPage />
               </PermissionRoute>
             }
@@ -48,7 +48,7 @@ function App() {
           <Route
             path="family"
             element={
-              <PermissionRoute role="PATIENT">
+              <PermissionRoute role={["PATIENT", "PATIENT_HOUSEHOLD"]}>
                 <FamilyPage />
               </PermissionRoute>
             }
@@ -56,7 +56,7 @@ function App() {
           <Route
             path="doctors"
             element={
-              <PermissionRoute role="PATIENT">
+              <PermissionRoute role={["PATIENT", "PATIENT_HOUSEHOLD"]}>
                 <DoctorsPage />
               </PermissionRoute>
             }
@@ -64,7 +64,7 @@ function App() {
           <Route
             path="history"
             element={
-              <PermissionRoute role="PATIENT">
+              <PermissionRoute role={["PATIENT", "PATIENT_HOUSEHOLD"]}>
                 <MedicalHistoryPage />
               </PermissionRoute>
             }

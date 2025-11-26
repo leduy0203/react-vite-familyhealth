@@ -1,12 +1,12 @@
-import React, { useEffect } from "react";
-import { Modal, Form, Input, DatePicker, Select, Space, App, Tag } from "antd";
-import { EditOutlined, UserOutlined } from "@ant-design/icons";
+import React, { useEffect, useState } from "react";
+import { Modal, Form, Input, DatePicker, Select, Space, App, Spin } from "antd";
+import { EditOutlined, UserOutlined, IdcardOutlined, MailOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import type { IFamilyMember } from "../../types/health";
+import { type IFamilyMemberNew, familyService } from "../../services/familyService";
 
 interface EditMemberModalProps {
   open: boolean;
-  member: IFamilyMember | null;
+  member: IFamilyMemberNew | null;
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -19,30 +19,56 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
 }) => {
   const { message } = App.useApp();
   const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const [memberDetail, setMemberDetail] = useState<IFamilyMemberNew | null>(null);
 
   useEffect(() => {
-    if (open && member) {
-      form.setFieldsValue({
-        name: member.name,
-        relation: member.relation,
-        dob: member.dob ? dayjs(member.dob) : null,
-        healthStatus: member.healthStatus,
-        notes: member.notes,
-      });
+    if (open && member?.id) {
+      loadMemberDetail(member.id);
     } else {
       form.resetFields();
+      setMemberDetail(null);
     }
-  }, [open, member, form]);
+  }, [open, member?.id]);
+
+  const loadMemberDetail = async (id: number) => {
+    setLoading(true);
+    try {
+      const response = await familyService.getById(id);
+      const detail = response.data;
+      setMemberDetail(detail);
+      form.setFieldsValue({
+        fullname: detail.fullname,
+        idCard: detail.idCard,
+        gender: detail.gender,
+        dateOfBirth: detail.dateOfBirth ? dayjs(detail.dateOfBirth) : null,
+        relation: detail.relation,
+        bhyt: detail.bhyt,
+        address: detail.address,
+        email: detail.email,
+      });
+    } catch (error: any) {
+      message.error(error?.response?.data?.message || "Không thể tải thông tin thành viên");
+      onClose();
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = async () => {
+    if (!memberDetail) return;
     try {
       const values = await form.validateFields();
-      console.log("Update member:", { ...member, ...values });
+      const payload = {
+        ...values,
+        dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format("YYYY-MM-DD") : null,
+      };
+      await familyService.update(memberDetail.id, payload);
       message.success("Cập nhật thành công");
       onSuccess?.();
       onClose();
-    } catch (err) {
-      console.error("Validation failed:", err);
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || "Cập nhật thất bại");
     }
   };
 
@@ -65,16 +91,12 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
       centered
       destroyOnHidden
     >
-      <div style={{ padding: "16px 0" }}>
-        <Form form={form} layout="vertical" size="large">
+      <Spin spinning={loading}>
+        <div style={{ padding: "16px 0" }}>
+        <Form form={form} layout="vertical" size="middle">
           <Form.Item
-            label={
-              <span>
-                <UserOutlined style={{ marginRight: 8, color: "#1890ff" }} />
-                Họ và tên
-              </span>
-            }
-            name="name"
+            label="Họ và tên"
+            name="fullname"
             rules={[
               { required: true, message: "Vui lòng nhập họ tên" },
               { min: 2, message: "Tên phải có ít nhất 2 ký tự" },
@@ -87,22 +109,36 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
           </Form.Item>
 
           <Form.Item
-            label="Quan hệ"
-            name="relation"
-            rules={[{ required: true, message: "Vui lòng chọn quan hệ" }]}
+            label="Số CCCD"
+            name="idCard"
+            rules={[
+              { required: true, message: "Vui lòng nhập số CCCD" },
+              { pattern: /^[0-9]{9,12}$/, message: "CCCD phải có 9-12 chữ số" },
+            ]}
           >
-            <Select placeholder="-- Chọn quan hệ --">
-              <Select.Option value="Cha">Cha</Select.Option>
-              <Select.Option value="Mẹ">Mẹ</Select.Option>
-              <Select.Option value="Con">Con</Select.Option>
-              <Select.Option value="Anh/Chị/Em">Anh/Chị/Em</Select.Option>
-              <Select.Option value="Vợ/Chồng">Vợ/Chồng</Select.Option>
-              <Select.Option value="Ông/Bà">Ông/Bà</Select.Option>
-              <Select.Option value="Khác">Khác</Select.Option>
+            <Input
+              placeholder="Nhập số CCCD"
+              prefix={<IdcardOutlined style={{ color: "#bfbfbf" }} />}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Giới tính"
+            name="gender"
+            rules={[{ required: true, message: "Vui lòng chọn giới tính" }]}
+          >
+            <Select placeholder="Chọn giới tính">
+              <Select.Option value="MALE">Nam</Select.Option>
+              <Select.Option value="FEMALE">Nữ</Select.Option>
+              <Select.Option value="OTHER">Khác</Select.Option>
             </Select>
           </Form.Item>
 
-          <Form.Item label="Ngày sinh" name="dob">
+          <Form.Item
+            label="Ngày sinh"
+            name="dateOfBirth"
+            rules={[{ required: true, message: "Vui lòng chọn ngày sinh" }]}
+          >
             <DatePicker
               style={{ width: "100%" }}
               placeholder="Chọn ngày sinh"
@@ -110,54 +146,60 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
             />
           </Form.Item>
 
-          <Form.Item label="Tình trạng sức khỏe" name="healthStatus">
-            <Select
-              placeholder="-- Chọn tình trạng --"
-              optionRender={(option) => option.data.label}
-            >
-              <Select.Option
-                value="Khỏe mạnh"
-                label={<Tag color="green">Khỏe mạnh</Tag>}
-              >
-                <Tag color="green">Khỏe mạnh</Tag>
-              </Select.Option>
-              <Select.Option
-                value="Bình thường"
-                label={<Tag color="cyan">Bình thường</Tag>}
-              >
-                <Tag color="cyan">Bình thường</Tag>
-              </Select.Option>
-              <Select.Option
-                value="Đang điều trị"
-                label={<Tag color="orange">Đang điều trị</Tag>}
-              >
-                <Tag color="orange">Đang điều trị</Tag>
-              </Select.Option>
-              <Select.Option
-                value="Cần theo dõi"
-                label={<Tag color="gold">Cần theo dõi</Tag>}
-              >
-                <Tag color="gold">Cần theo dõi</Tag>
-              </Select.Option>
-              <Select.Option
-                value="Nghiêm trọng"
-                label={<Tag color="red">Nghiêm trọng</Tag>}
-              >
-                <Tag color="red">Nghiêm trọng</Tag>
-              </Select.Option>
+          <Form.Item
+            label="Quan hệ"
+            name="relation"
+            rules={[{ required: true, message: "Vui lòng chọn quan hệ" }]}
+          >
+            <Select placeholder="Chọn quan hệ">
+              <Select.Option value="CHU_HO">Chủ hộ</Select.Option>
+              <Select.Option value="VO">Vợ</Select.Option>
+              <Select.Option value="CHONG">Chồng</Select.Option>
+              <Select.Option value="CON">Con</Select.Option>
+              <Select.Option value="BO">Bố</Select.Option>
+              <Select.Option value="ME">Mẹ</Select.Option>
             </Select>
           </Form.Item>
 
-          <Form.Item label="Ghi chú" name="notes">
+          <Form.Item
+            label="Số BHYT"
+            name="bhyt"
+            rules={[
+              { pattern: /^[0-9]{10,15}$/, message: "BHYT phải có 10-15 chữ số" },
+            ]}
+          >
+            <Input
+              placeholder="Nhập số BHYT (tùy chọn)"
+              prefix={<IdcardOutlined style={{ color: "#bfbfbf" }} />}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Địa chỉ"
+            name="address"
+            rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
+          >
             <Input.TextArea
-              rows={3}
-              placeholder="Ghi chú thêm thông tin..."
-              showCount
-              maxLength={300}
+              rows={2}
+              placeholder="Nhập địa chỉ đầy đủ"
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Email (tùy chọn)"
+            name="email"
+            rules={[
+              { type: "email", message: "Email không hợp lệ" },
+            ]}
+          >
+            <Input
+              placeholder="Nhập email"
+              prefix={<MailOutlined style={{ color: "#bfbfbf" }} />}
             />
           </Form.Item>
         </Form>
-      </div>
+        </div>
+      </Spin>
     </Modal>
   );
 };

@@ -1,5 +1,5 @@
 // Role types
-export type UserRole = "ADMIN" | "DOCTOR" | "PATIENT";
+export type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "PATIENT_HOUSEHOLD";
 
 // Check if user has specific role
 export const hasRole = (user: any, role: UserRole | UserRole[]): boolean => {
