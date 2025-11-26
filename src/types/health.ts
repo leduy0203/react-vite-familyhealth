@@ -22,16 +22,28 @@ export interface IFamilyMember {
 }
 
 export interface IAppointment {
-  id: string;
+  id: string | number;
   recordId?: string; // ID hồ sơ bệnh án
-  doctorId: string; // ID bác sĩ
+  doctorId?: string | number; // ID bác sĩ
   doctorName?: string; // Tên bác sĩ (từ API)
-  patientId: string; // ID bệnh nhân
+  patientId?: string | number; // ID bệnh nhân
   patientName?: string; // Tên bệnh nhân (từ API)
-  appointmentDate: string; // Ngày giờ hẹn (ISO format)
+  appointmentDate?: string; // Ngày giờ hẹn (ISO format) - legacy field
+  time?: string; // Ngày giờ hẹn mới từ API backend
   location: string; // Địa điểm khám
-  status: "pending" | "confirmed" | "completed" | "cancelled"; // Trạng thái
+  status: "SCHEDULED" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "pending" | "confirmed" | "completed" | "cancelled"; // Trạng thái
   note?: string; // Ghi chú
+  doctor?: {
+    id: number;
+    fullName: string;
+    expertise: string;
+  };
+  member?: {
+    id: number;
+    fullName: string;
+    relation: string;
+    bhyt: string;
+  };
   createdAt?: string;
   updatedAt?: string;
 }

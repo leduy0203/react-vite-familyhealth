@@ -51,7 +51,7 @@ const DoctorAppointments: React.FC = () => {
     setDetailModalOpen(true);
   };
 
-  const handleUpdateStatus = async (id: string, status: IAppointment["status"]) => {
+  const handleUpdateStatus = async (id: string | number, status: IAppointment["status"]) => {
     const appointment = list.find((a) => a.id === id);
     if (!appointment) return;
 
@@ -104,16 +104,27 @@ const DoctorAppointments: React.FC = () => {
   // Get appointments for selected date
   const selectedDateStr = selectedDate.format("YYYY-MM-DD");
   const appointmentsOnSelectedDate = list
-    .filter((a) => a.appointmentDate?.startsWith(selectedDateStr))
-    .sort((a, b) => (a.appointmentDate > b.appointmentDate ? 1 : -1));
+    .filter((a) => {
+      const aptDate = a.time || a.appointmentDate || "";
+      return aptDate.startsWith(selectedDateStr);
+    })
+    .sort((a, b) => {
+      const dateA = a.time || a.appointmentDate || "";
+      const dateB = b.time || b.appointmentDate || "";
+      return dateA > dateB ? 1 : -1;
+    });
 
   // Statistics
-  const pendingCount = list.filter((a) => a.status === "pending").length;
-  const confirmedCount = list.filter((a) => a.status === "confirmed").length;
-  const completedCount = list.filter((a) => a.status === "completed").length;
+  const pendingCount = list.filter((a) => a.status === "SCHEDULED" || a.status === "pending").length;
+  const confirmedCount = list.filter((a) => a.status === "CONFIRMED" || a.status === "confirmed").length;
+  const completedCount = list.filter((a) => a.status === "COMPLETED" || a.status === "completed").length;
 
   const getStatusTag = (status: IAppointment["status"]) => {
-    const statusConfig = {
+    const statusConfig: Record<string, { color: string; text: string }> = {
+      SCHEDULED: { color: "warning", text: "Chờ xác nhận" },
+      CONFIRMED: { color: "success", text: "Đã xác nhận" },
+      COMPLETED: { color: "default", text: "Hoàn thành" },
+      CANCELLED: { color: "error", text: "Đã hủy" },
       pending: { color: "warning", text: "Chờ xác nhận" },
       confirmed: { color: "success", text: "Đã xác nhận" },
       completed: { color: "default", text: "Hoàn thành" },

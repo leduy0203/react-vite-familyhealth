@@ -81,21 +81,17 @@ export const authService = {
   },
 
   /**
-   * Logout user (optional - if backend has logout endpoint)
+   * Logout user - call backend logout API
    */
   async logout(): Promise<void> {
     try {
-      // TODO: Call backend logout endpoint if available
-      // await axiosInstance.post("/auth/logout");
-      
-      // Clear local storage
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-      localStorage.removeItem("user_id");
-      localStorage.removeItem("user_info");
+      // Call backend logout endpoint
+      await axiosInstance.get("/auth/logout");
     } catch (error) {
-      console.error("Logout error:", error);
-      // Still clear local storage even if API fails
+      console.error("Logout API error:", error);
+      // Continue to clear local storage even if API fails
+    } finally {
+      // Always clear local storage
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("user_id");

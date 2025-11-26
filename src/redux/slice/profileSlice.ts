@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { api } from "../../config/api";
+import { authService } from "../../services/authService";
+import { profileApi } from "../../api";
 import type { IUserProfile } from "../../types/health";
 
 interface IState {
@@ -15,15 +16,20 @@ const initialState: IState = {
 export const fetchProfile = createAsyncThunk(
   "profile/fetchProfile",
   async () => {
-    const res = await api.getProfile();
-    return res.data;
+    const res = await authService.getProfile();
+    // Map backend response to IUserProfile
+    const profile: IUserProfile = {
+      id: String(res.data.id),
+      name: res.data.fullName,
+    };
+    return profile;
   }
 );
 
 export const saveProfile = createAsyncThunk(
   "profile/saveProfile",
   async (payload: IUserProfile) => {
-    const res = await api.updateProfile(payload);
+    const res = await profileApi.update(payload);
     return res.data;
   }
 );

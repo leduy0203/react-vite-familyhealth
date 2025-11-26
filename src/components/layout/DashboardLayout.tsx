@@ -36,6 +36,9 @@ const DashboardLayout: React.FC = () => {
     if (p.startsWith("/admin/doctors")) return ["9"];
     if (p.startsWith("/appointments")) return ["2"];
     if (p.startsWith("/doctor/appointments")) return ["3"];
+    if (p.startsWith("/doctor/patients")) return ["10"];
+    if (p.startsWith("/doctor/patient-history")) return ["10"];
+    if (p.startsWith("/doctor/medical-history")) return ["11"];
     if (p.startsWith("/family")) return ["4"];
     if (p.startsWith("/doctors")) return ["5"];
     if (p.startsWith("/history")) return ["8"];
@@ -101,6 +104,7 @@ const DashboardLayout: React.FC = () => {
           mode="inline"
           selectedKeys={selectedKey}
           style={{ fontSize: 17 }}
+          defaultOpenKeys={hasRole(user, "ADMIN") ? ["admin"] : []}
           items={[
             // Admin Menu - Chỉ hiển thị cho ADMIN
             ...(hasRole(user, "ADMIN")
@@ -152,6 +156,24 @@ const DashboardLayout: React.FC = () => {
                       Link,
                       { to: "/doctor/appointments" },
                       "Lịch khám bệnh"
+                    ),
+                  },
+                  {
+                    key: "10",
+                    icon: React.createElement(UsergroupAddOutlined),
+                    label: React.createElement(
+                      Link,
+                      { to: "/doctor/patients" },
+                      "Danh sách bệnh nhân"
+                    ),
+                  },
+                  {
+                    key: "11",
+                    icon: React.createElement(HistoryOutlined),
+                    label: React.createElement(
+                      Link,
+                      { to: "/doctor/medical-history" },
+                      "Lịch sử khám bệnh"
                     ),
                   },
                 ]

@@ -16,7 +16,7 @@ const { Text, Title } = Typography;
 
 interface AppointmentDetailCardProps {
   appointment: IAppointment;
-  onUpdateStatus?: (id: string, status: IAppointment["status"]) => void;
+  onUpdateStatus?: (id: string | number, status: IAppointment["status"]) => void;
 }
 
 const AppointmentDetailCard: React.FC<AppointmentDetailCardProps> = ({
@@ -24,19 +24,23 @@ const AppointmentDetailCard: React.FC<AppointmentDetailCardProps> = ({
   onUpdateStatus,
 }) => {
   const getStatusTag = (status: IAppointment["status"]) => {
-    const statusConfig = {
+    const statusConfig: Record<string, { color: string; text: string }> = {
+      SCHEDULED: { color: "warning", text: "Chờ xác nhận" },
+      CONFIRMED: { color: "success", text: "Đã xác nhận" },
+      COMPLETED: { color: "default", text: "Hoàn thành" },
+      CANCELLED: { color: "error", text: "Đã hủy" },
       pending: { color: "warning", text: "Chờ xác nhận" },
       confirmed: { color: "success", text: "Đã xác nhận" },
       completed: { color: "default", text: "Hoàn thành" },
       cancelled: { color: "error", text: "Đã hủy" },
     };
-    const config = statusConfig[status];
+    const config = statusConfig[status] || statusConfig.SCHEDULED;
     return <Tag color={config.color}>{config.text}</Tag>;
   };
 
-  const canConfirm = appointment.status === "pending";
-  const canComplete = appointment.status === "confirmed";
-  const canCancel = appointment.status === "pending" || appointment.status === "confirmed";
+  const canConfirm = appointment.status === "SCHEDULED" || appointment.status === "pending";
+  const canComplete = appointment.status === "CONFIRMED" || appointment.status === "confirmed";
+  const canCancel = canConfirm || canComplete;
 
   return (
     <Card>

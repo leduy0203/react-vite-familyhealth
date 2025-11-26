@@ -45,23 +45,11 @@ const AppointmentsPage: React.FC = () => {
     dispatch(fetchAppointments());
   }, [dispatch]);
 
-  // Xác nhận lịch hẹn
-  const handleConfirm = async (apt: IAppointment) => {
-    try {
-      await dispatch(
-        updateAppointment({ ...apt, status: "confirmed" })
-      ).unwrap();
-      message.success("Đã xác nhận lịch hẹn thành công!");
-    } catch (error) {
-      message.error("Xác nhận thất bại, vui lòng thử lại!");
-    }
-  };
-
-  // Hủy lịch hẹn
+  // Hủy lịch hẹn - Người dùng chỉ có thể hủy, không thể xác nhận
   const handleCancel = async (apt: IAppointment) => {
     try {
       await dispatch(
-        updateAppointment({ ...apt, status: "cancelled" })
+        updateAppointment({ ...apt, status: "CANCELLED" })
       ).unwrap();
       message.success("Đã hủy lịch hẹn!");
     } catch (error) {
@@ -71,7 +59,10 @@ const AppointmentsPage: React.FC = () => {
 
   // Lấy các lịch hẹn theo ngày
   const getAppointmentsForDate = (date: Dayjs) => {
-    return list.filter((apt) => dayjs(apt.appointmentDate).isSame(date, "day"));
+    return list.filter((apt) => {
+      const aptDate = apt.time || apt.appointmentDate;
+      return aptDate && dayjs(aptDate).isSame(date, "day");
+    });
   };
 
   // Render cell trong calendar
@@ -90,8 +81,8 @@ const AppointmentsPage: React.FC = () => {
                 ellipsis
                 style={{ fontSize: 12, marginLeft: 4, maxWidth: 100 }}
               >
-                {dayjs(apt.appointmentDate).format("HH:mm")} -{" "}
-                {apt.doctorName || "Bác sĩ"}
+                {dayjs(apt.time || apt.appointmentDate).format("HH:mm")} -{" "}
+                {apt.doctor?.fullName || apt.doctorName || "Bác sĩ"}
               </Text>
             </li>
           );
@@ -217,7 +208,6 @@ const AppointmentsPage: React.FC = () => {
                       <AppointmentCard
                         appointment={apt}
                         variant="calendar"
-                        onConfirm={handleConfirm}
                         onCancel={handleCancel}
                       />
                     </List.Item>
@@ -270,7 +260,6 @@ const AppointmentsPage: React.FC = () => {
                 <AppointmentCard
                   appointment={apt}
                   variant="list"
-                  onConfirm={handleConfirm}
                   onCancel={handleCancel}
                 />
               </List.Item>

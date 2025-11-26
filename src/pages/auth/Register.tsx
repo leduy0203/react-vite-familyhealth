@@ -33,7 +33,13 @@ const Register: React.FC = () => {
       message.success("Đăng ký thành công! Vui lòng đăng nhập.");
       navigate("/login");
     } catch (err: any) {
-      message.error(err?.response?.data?.message || "Đăng ký thất bại");
+          let errorMsg = "Đăng ký thất bại";
+          if (err?.response?.data?.message) {
+            errorMsg = err.response.data.message;
+          } else if (err?.message) {
+            errorMsg = err.message;
+          }
+          message.error(errorMsg);
     } finally {
       setLoading(false);
     }

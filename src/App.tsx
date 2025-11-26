@@ -10,6 +10,9 @@ import ProfilePage from "./pages/account/Profile";
 import AppointmentsPage from "./pages/appointments";
 import FamilyPage from "./pages/family";
 import DoctorAppointments from "./pages/doctor/appointments";
+import DoctorPatientsList from "./pages/doctor/DoctorPatientsList";
+import DoctorPatientHistory from "./pages/doctor/DoctorPatientHistory";
+import DoctorMedicalHistory from "./pages/doctor/DoctorMedicalHistory";
 import DoctorsPage from "./pages/doctors";
 import MedicalHistoryPage from "./pages/history";
 import UnauthorizedPage from "./pages/unauthorized";
@@ -76,6 +79,30 @@ function App() {
             element={
               <PermissionRoute role="DOCTOR">
                 <DoctorAppointments />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="doctor/patients"
+            element={
+              <PermissionRoute role="DOCTOR">
+                <DoctorPatientsList />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="doctor/patient-history/:memberId"
+            element={
+              <PermissionRoute role="DOCTOR">
+                <DoctorPatientHistory />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="doctor/medical-history"
+            element={
+              <PermissionRoute role="DOCTOR">
+                <DoctorMedicalHistory />
               </PermissionRoute>
             }
           />

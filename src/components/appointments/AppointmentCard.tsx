@@ -31,7 +31,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
   variant = "calendar",
 }) => {
   const config = getStatusConfig(apt.status);
-  const aptDate = dayjs(apt.appointmentDate);
+  const aptDate = dayjs(apt.time || apt.appointmentDate);
 
   // Compact view for calendar
   if (variant === "calendar") {
@@ -61,11 +61,11 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
           {/* Info */}
           <div>
             <MedicineBoxOutlined style={{ marginRight: 6, color: "#1890ff" }} />
-            <Text strong>{apt.doctorName || "N/A"}</Text>
+            <Text strong>{apt.doctor?.fullName || apt.doctorName || "N/A"}</Text>
           </div>
           <div>
             <UserOutlined style={{ marginRight: 6, color: "#52c41a" }} />
-            <Text>{apt.patientName || "N/A"}</Text>
+            <Text>{apt.member?.fullName || apt.patientName || "N/A"}</Text>
           </div>
           <div>
             <EnvironmentOutlined style={{ marginRight: 6, color: "#fa8c16" }} />
@@ -80,45 +80,26 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
             </div>
           )}
 
-          {/* Actions */}
-          {apt.status === "pending" && (
-            <Space style={{ width: "100%", paddingTop: 8 }}>
+          {/* Actions - Chỉ hiển thị nút hủy cho người dùng */}
+          {(apt.status === "SCHEDULED" || apt.status === "pending") && onCancel && (
+            <Popconfirm
+              title="Hủy lịch hẹn"
+              description="Bạn có chắc muốn hủy?"
+              onConfirm={() => onCancel(apt)}
+              okText="Hủy lịch"
+              cancelText="Không"
+            >
               <Button
-                type="primary"
+                style={{ height: "35px", width: "100%" }}
+                danger
                 size="small"
-                icon={<CheckOutlined />}
-                onClick={() => onConfirm?.(apt)}
-                style={{
-                  flex: 1,
-                  height: "35px",
-                  background:
-                    "linear-gradient(135deg, #52c41a 0%, #73d13d 100%)",
-                  borderColor: "#52c41a",
-                  fontWeight: 500,
-                  boxShadow: "0 2px 4px rgba(82, 196, 26, 0.3)",
-                }}
+                icon={<CloseOutlined />}
               >
-                Xác nhận
+                Hủy lịch hẹn
               </Button>
-              <Popconfirm
-                title="Hủy lịch hẹn"
-                description="Bạn có chắc muốn hủy?"
-                onConfirm={() => onCancel?.(apt)}
-                okText="Hủy lịch"
-                cancelText="Không"
-              >
-                <Button
-                  style={{ height: "35px" }}
-                  danger
-                  size="small"
-                  icon={<CloseOutlined />}
-                >
-                  Hủy
-                </Button>
-              </Popconfirm>
-            </Space>
+            </Popconfirm>
           )}
-          {apt.status === "confirmed" && onEdit && (
+          {(apt.status === "CONFIRMED" || apt.status === "confirmed") && onEdit && (
             <Button
               size="small"
               icon={<EditOutlined />}
@@ -176,7 +157,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 icon={<MedicineBoxOutlined />}
                 style={{ backgroundColor: "#1890ff", marginRight: 8 }}
               />
-              <Text strong>BS. {apt.doctorName || "Chưa xác định"}</Text>
+              <Text strong>BS. {apt.doctor?.fullName || apt.doctorName || "Chưa xác định"}</Text>
             </div>
             <div>
               <Avatar
@@ -184,7 +165,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 icon={<UserOutlined />}
                 style={{ backgroundColor: "#52c41a", marginRight: 8 }}
               />
-              <Text>{apt.patientName || "Chưa xác định"}</Text>
+              <Text>{apt.member?.fullName || apt.patientName || "Chưa xác định"}</Text>
             </div>
             <div>
               <EnvironmentOutlined
@@ -227,46 +208,27 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
             </Text>
           )}
 
-          {apt.status === "pending" && (
-            <Space direction="vertical" style={{ width: "100%", marginTop: 8 }}>
+          {/* Actions - Chỉ hiển thị nút hủy cho người dùng */}
+          {(apt.status === "SCHEDULED" || apt.status === "pending") && onCancel && (
+            <Popconfirm
+              title="Hủy lịch hẹn"
+              description="Bạn có chắc muốn hủy?"
+              onConfirm={() => onCancel(apt)}
+              okText="Hủy lịch"
+              cancelText="Không"
+            >
               <Button
-                type="primary"
+                style={{ height: "35px", marginTop: 8 }}
+                danger
                 size="small"
-                icon={<CheckOutlined />}
-                onClick={() => onConfirm?.(apt)}
+                icon={<CloseOutlined />}
                 block
-                style={{
-                  flex: 1,
-                  height: "35px",
-                  background:
-                    "linear-gradient(135deg, #52c41a 0%, #73d13d 100%)",
-                  borderColor: "#52c41a",
-                  fontWeight: 500,
-                  boxShadow: "0 2px 4px rgba(82, 196, 26, 0.3)",
-                }}
               >
-                Xác nhận
+                Hủy lịch hẹn
               </Button>
-              <Popconfirm
-                title="Hủy lịch hẹn"
-                description="Bạn có chắc muốn hủy?"
-                onConfirm={() => onCancel?.(apt)}
-                okText="Hủy lịch"
-                cancelText="Không"
-              >
-                <Button
-                  style={{ height: "35px" }}
-                  danger
-                  size="small"
-                  icon={<CloseOutlined />}
-                  block
-                >
-                  Hủy
-                </Button>
-              </Popconfirm>
-            </Space>
+            </Popconfirm>
           )}
-          {apt.status === "confirmed" && onEdit && (
+          {(apt.status === "CONFIRMED" || apt.status === "confirmed") && onEdit && (
             <Button
               size="small"
               icon={<EditOutlined />}

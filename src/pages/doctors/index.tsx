@@ -25,16 +25,22 @@ import {
 import { doctorService } from "../../services/doctorService";
 import { EXPERTISE_LABELS, GENDER_LABELS } from "../../constants/expertise";
 import type { IDoctorNew, DoctorListMeta } from "../../types/doctor.types";
+import BookAppointmentModal from "../../components/doctors/BookAppointmentModal";
+import { useAppDispatch } from "../../redux/hooks";
+import { fetchAppointments } from "../../redux/slice/appointmentSlice";
 import "../../styles/doctors.scss";
 
 const { Title, Text } = Typography;
 
 const DoctorsPage: React.FC = () => {
+  const dispatch = useAppDispatch();
   const [doctors, setDoctors] = useState<IDoctorNew[]>([]);
   const [meta, setMeta] = useState<DoctorListMeta | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [selectedExpertise, setSelectedExpertise] = useState<string>();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<IDoctorNew | null>(null);
   const { message } = App.useApp();
 
   // Fetch doctors from API
@@ -83,8 +89,21 @@ const DoctorsPage: React.FC = () => {
   };
 
   const handleBookAppointment = (doctor: IDoctorNew) => {
-    console.log("Book appointment with:", doctor.fullname);
-    // TODO: Navigate to appointments page with doctor pre-selected
+    setSelectedDoctor(doctor);
+    setModalVisible(true);
+  };
+
+  const handleModalClose = () => {
+    setModalVisible(false);
+    setSelectedDoctor(null);
+  };
+
+  const handleAppointmentSubmit = (values: any) => {
+    console.log("Booking appointment:", values);
+    // Reload appointments sau khi đặt lịch thành công
+    dispatch(fetchAppointments());
+    handleModalClose();
+    // TODO: Call API to create appointment
   };
 
   const getAgeFromDOB = (dob?: string | null): number | null => {
@@ -275,6 +294,14 @@ const DoctorsPage: React.FC = () => {
           )}
         />
       </Card>
+
+      {/* Book Appointment Modal */}
+      <BookAppointmentModal
+        visible={modalVisible}
+        doctor={selectedDoctor}
+        onCancel={handleModalClose}
+        onSubmit={handleAppointmentSubmit}
+      />
     </div>
   );
 };

@@ -135,7 +135,7 @@ const ProfilePage: React.FC = () => {
                   <MailOutlined /> {user?.email || "email@example.com"}
                 </Text>
                 <div className="user-role">
-                  <Tag color="blue">{user?.role?.name || "User"}</Tag>
+                  <Tag color="blue">{typeof user?.role === 'object' ? user.role.name : user?.role || "User"}</Tag>
                 </div>
               </div>
             </div>
@@ -168,7 +168,7 @@ const ProfilePage: React.FC = () => {
                       </Text>
                       <div>
                         <Text strong className="info-value">
-                          {user?.role?.name || "N/A"}
+                          {typeof user?.role === 'object' ? user.role.name : user?.role || "N/A"}
                         </Text>
                       </div>
                     </div>

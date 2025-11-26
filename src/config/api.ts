@@ -1,5 +1,25 @@
-// Mock API for development (legacy code)
-// Note: Authentication moved to src/services/authService.ts
+/**
+ * Legacy Mock API - DEPRECATED
+ * 
+ * ⚠️ CHÚ Ý: File này chứa mock data cũ, đang dần được thay thế bằng services/
+ * 
+ * ✅ Đã có Service (KHÔNG dùng api.* này nữa):
+ * - authService.ts      → login, register, logout, profile
+ * - userService.ts      → user management
+ * - doctorService.ts    → doctor list, detail
+ * - familyService.ts    → family members CRUD
+ * - appointmentService.ts → appointments CRUD
+ * 
+ * ⚠️ Còn dùng tạm (chưa có service):
+ * - Medical records (records, transfer, viewed)
+ * - Patients management (getPatients, getPatient, updatePatientNotes)
+ * - Medical visits history (getMedicalVisits, getMedicalVisitById)
+ * - Prescriptions (getPrescriptions, createPrescription)
+ * - Admin stats (getSystemStats, getDoctorStats)
+ * - Profile (updateProfile)
+ * 
+ * TODO: Tạo các service tương ứng và migrate dần
+ */
 
 import type { IDoctor } from "../types/health";
 
@@ -80,105 +100,16 @@ function delay<T>(ms: number, value: T): Promise<T> {
 }
 
 export const api = {
-  // Note: login() and getProfile() moved to authService.ts
-
-  fetchRecords: async () => {
-    const records = [
-      { id: "r1", name: "Hồ sơ A", owner: "Gia đình" },
-      { id: "r2", name: "Hồ sơ B", owner: "Gia đình" },
-    ];
-    return delay(300, { data: records });
-  },
-  // Profile endpoints
+  // ========================================
+  // ✅ Profile (TODO: profileService.ts)
+  // ========================================
   updateProfile: async (profile: any) => {
-    // pretend save
     return delay(300, { data: profile });
   },
 
-  // Family endpoints
-  getFamilyMembers: async () => {
-    const members = [
-      {
-        id: "m1",
-        name: "Nguyễn Văn A",
-        relation: "Chồng",
-        dob: "1985-01-01",
-        healthStatus: "Bình thường",
-      },
-      {
-        id: "m2",
-        name: "Trần Thị B",
-        relation: "Vợ",
-        dob: "1987-03-05",
-        healthStatus: "Nghiêm trọng",
-      },
-    ];
-    return delay(300, { data: members });
-  },
-  addFamilyMember: async (member: any) => {
-    const item = { ...member, id: `m${Date.now()}` };
-    return delay(200, { data: item });
-  },
-  updateFamilyMember: async (member: any) => {
-    return delay(200, { data: member });
-  },
-  deleteFamilyMember: async (id: string) => {
-    return delay(200, { data: { id } });
-  },
-
-  // Appointments
-  getAppointments: async () => {
-    const appts = [
-      {
-        id: "a1",
-        recordId: "rec1",
-        doctorId: "doc1",
-        doctorName: "BS. Nguyễn Văn An",
-        patientId: "m1",
-        patientName: "Nguyễn Văn A",
-        appointmentDate: "2025-11-05T09:00:00",
-        location: "Phòng khám Đa khoa Gia Đình, 123 Đường ABC",
-        status: "confirmed",
-        note: "Tái khám sau 2 tuần điều trị",
-        createdAt: "2025-10-28T10:00:00",
-      },
-      {
-        id: "a2",
-        recordId: "rec2",
-        doctorId: "doc2",
-        doctorName: "BS. Trần Thị Bình",
-        patientId: "m2",
-        patientName: "Trần Thị B",
-        appointmentDate: "2025-10-30T14:30:00",
-        location: "Bệnh viện Đa khoa Trung ương, Tầng 3",
-        status: "pending",
-        note: "Khám tổng quát định kỳ",
-        createdAt: "2025-10-25T08:00:00",
-      },
-      {
-        id: "a3",
-        recordId: "rec3",
-        doctorId: "doc1",
-        doctorName: "BS. Nguyễn Văn An",
-        patientId: "m1",
-        patientName: "Nguyễn Văn A",
-        appointmentDate: "2025-10-15T10:00:00",
-        location: "Phòng khám Đa khoa Gia Đình, 123 Đường ABC",
-        status: "completed",
-        note: "Khám sức khỏe đã hoàn thành",
-        createdAt: "2025-10-10T09:00:00",
-      },
-    ];
-    return delay(300, { data: appts });
-  },
-  createAppointment: async (appt: any) => {
-    return delay(200, { data: { ...appt, id: `a${Date.now()}` } });
-  },
-  updateAppointment: async (appt: any) => {
-    return delay(200, { data: appt });
-  },
-
-  // Prescriptions
+  // ========================================
+  // ✅ Prescriptions (TODO: prescriptionService.ts)
+  // ========================================
   getPrescriptions: async () => {
     const list = [
       {
@@ -217,7 +148,9 @@ export const api = {
     (api as any)._records.unshift(item);
     return delay(200, { data: item });
   },
-  // Doctors list for transfer
+  // ========================================
+  // ✅ Doctors for transfer (TODO: migrate to doctorService)
+  // ========================================
   getDoctors: async () => {
     const docs = [
       { id: "doc1", name: "Bác sĩ Nguyễn" },
@@ -227,10 +160,8 @@ export const api = {
     return delay(150, { data: docs });
   },
 
-  // Full doctors list for doctors page
-  // TODO: Replace with real API call
-  // Example: return axios.get('/api/doctors')
-  getDoctorsList: async (): Promise<{ data: IDoctor[] }> => {
+  // Mock doctors (only for getDoctors - transfer list)
+  _getDoctorsListMock: async (): Promise<{ data: IDoctor[] }> => {
     const doctors: IDoctor[] = [
       {
         id: "doc1",
@@ -348,15 +279,16 @@ export const api = {
     return delay(300, { data: doctors });
   },
 
-  // Get doctor by ID
-  // TODO: Replace with real API call
-  // Example: return axios.get(`/api/doctors/${id}`)
   getDoctorById: async (id: string): Promise<{ data: IDoctor }> => {
-    const res = await api.getDoctorsList();
-    const doctor = res.data.find((d) => d.id === id);
+    const res = await api._getDoctorsListMock();
+    const doctor = res.data.find((d: IDoctor) => d.id === id);
     if (!doctor) return Promise.reject({ message: "Doctor not found" });
     return delay(200, { data: doctor });
   },
+
+  // ========================================
+  // ✅ Medical Records (TODO: recordService.ts)
+  // ========================================
 
   fetchMedicalRecords: async (opts?: {
     ownerId?: string;
@@ -403,8 +335,9 @@ export const api = {
     return delay(200, { data: recs[idx] });
   },
 
-  // Patients Management
-  // TODO: Replace with real API call
+  // ========================================
+  // ✅ Patients Management (TODO: patientService.ts)
+  // ========================================
   getPatients: async (_opts?: { doctorId?: string }): Promise<{ data: any[] }> => {
     const patients = [
       {
@@ -496,9 +429,9 @@ export const api = {
     return delay(200, { data: updated });
   },
 
-  // Medical Visit History
-  // TODO: Replace with real API call
-  // Example: return axios.get('/api/medical-visits')
+  // ========================================
+  // ✅ Medical Visit History (TODO: visitService.ts)
+  // ========================================
   getMedicalVisits: async (): Promise<{ data: any[] }> => {
     const visits = [
       {
@@ -613,7 +546,9 @@ export const api = {
     return delay(200, { data: visit });
   },
 
-  // Admin: User Management
+  // ========================================
+  // ❌ DEPRECATED - Dùng userService.ts thay thế
+  // ========================================
   _users: [
     // 🔐 ADMIN - Quản trị viên
     {
@@ -696,10 +631,12 @@ export const api = {
     return delay(200, { data: { id } });
   },
 
-  // Admin: Doctor Management Extensions
+  // ========================================
+  // ✅ Admin Stats & Doctor Extensions (TODO: statsService.ts)
+  // ========================================
   updateDoctorInfo: async (id: string, data: any): Promise<{ data: any }> => {
-    const doctors = await api.getDoctorsList();
-    const doctor = doctors.data.find((d) => d.id === id);
+    const doctors = await api._getDoctorsListMock();
+    const doctor = doctors.data.find((d: IDoctor) => d.id === id);
     if (!doctor) return Promise.reject({ message: "Doctor not found" });
     const updated = { ...doctor, ...data, updatedAt: new Date().toISOString() };
     return delay(200, { data: updated });
@@ -727,7 +664,6 @@ export const api = {
     return delay(300, { data: stats });
   },
 
-  // Admin: System Statistics
   getSystemStats: async (): Promise<{ data: any }> => {
     const stats = {
       totalUsers: (api as any)._users.length,
