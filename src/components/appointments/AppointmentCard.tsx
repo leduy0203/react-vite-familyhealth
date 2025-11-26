@@ -5,7 +5,6 @@ import {
   EnvironmentOutlined,
   UserOutlined,
   MedicineBoxOutlined,
-  CheckOutlined,
   CloseOutlined,
   EditOutlined,
 } from "@ant-design/icons";
@@ -25,7 +24,6 @@ interface AppointmentCardProps {
 
 const AppointmentCard: React.FC<AppointmentCardProps> = ({
   appointment: apt,
-  onConfirm,
   onCancel,
   onEdit,
   variant = "calendar",

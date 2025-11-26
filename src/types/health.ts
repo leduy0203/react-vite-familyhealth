@@ -44,6 +44,16 @@ export interface IAppointment {
     relation: string;
     bhyt: string;
   };
+  // Medical result - Kết quả khám bệnh (khi doctor hoàn thành)
+  medicalResult?: {
+    diagnosis: string; // Chẩn đoán
+    symptoms?: string[]; // Triệu chứng
+    treatment?: string; // Hướng điều trị
+    prescription?: string; // Đơn thuốc
+    labTests?: string[]; // Xét nghiệm yêu cầu
+    followUpDate?: string; // Ngày tái khám
+    notes?: string; // Ghi chú thêm
+  };
   createdAt?: string;
   updatedAt?: string;
 }

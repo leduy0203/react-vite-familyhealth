@@ -35,6 +35,7 @@ const DashboardLayout: React.FC = () => {
     if (p.startsWith("/admin/users")) return ["7"];
     if (p.startsWith("/admin/doctors")) return ["9"];
     if (p.startsWith("/appointments")) return ["2"];
+    if (p.startsWith("/doctor/confirmed-appointments")) return ["12"];
     if (p.startsWith("/doctor/appointments")) return ["3"];
     if (p.startsWith("/doctor/patients")) return ["10"];
     if (p.startsWith("/doctor/patient-history")) return ["10"];
@@ -151,11 +152,20 @@ const DashboardLayout: React.FC = () => {
               ? [
                   {
                     key: "3",
-                    icon: React.createElement(FaStethoscope),
+                    icon: React.createElement(ScheduleOutlined),
                     label: React.createElement(
                       Link,
                       { to: "/doctor/appointments" },
-                      "Lịch khám bệnh"
+                      "Lịch hẹn"
+                    ),
+                  },
+                  {
+                    key: "12",
+                    icon: React.createElement(FaStethoscope),
+                    label: React.createElement(
+                      Link,
+                      { to: "/doctor/confirmed-appointments" },
+                      "Khám bệnh"
                     ),
                   },
                   {

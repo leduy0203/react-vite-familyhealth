@@ -13,6 +13,7 @@ import {
   Row,
   Col,
   Statistic,
+  Segmented,
 } from "antd";
 import {
   HomeOutlined,
@@ -21,10 +22,12 @@ import {
   CheckCircleOutlined,
   UserOutlined,
   EnvironmentOutlined,
+  UnorderedListOutlined,
 } from "@ant-design/icons";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { fetchAppointments, updateAppointment } from "../../redux/slice/appointmentSlice";
 import AppointmentDetailCard from "../../components/appointments/AppointmentDetailCard";
+import MedicalResultModal from "../../components/appointments/MedicalResultModal";
 import type { IAppointment } from "../../types/health";
 import dayjs, { type Dayjs } from "dayjs";
 
@@ -37,6 +40,9 @@ const DoctorAppointments: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<IAppointment | null>(null);
+  const [filterStatus, setFilterStatus] = useState<'SCHEDULED' | 'CONFIRMED' | 'all'>('SCHEDULED');
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [medicalResultModalOpen, setMedicalResultModalOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchAppointments());
@@ -55,6 +61,13 @@ const DoctorAppointments: React.FC = () => {
     const appointment = list.find((a) => a.id === id);
     if (!appointment) return;
 
+    // If completing appointment, open medical result modal first
+    if (status === "COMPLETED") {
+      setSelectedAppointment(appointment);
+      setMedicalResultModalOpen(true);
+      return;
+    }
+
     try {
       await dispatch(updateAppointment({ ...appointment, status })).unwrap();
       message.success("Cập nhật trạng thái thành công");
@@ -65,9 +78,32 @@ const DoctorAppointments: React.FC = () => {
     }
   };
 
+  const handleSubmitMedicalResult = async (
+    appointmentId: string | number,
+    result: IAppointment["medicalResult"]
+  ) => {
+    const appointment = list.find((a) => a.id === appointmentId);
+    if (!appointment) return;
+
+    try {
+      await dispatch(
+        updateAppointment({
+          ...appointment,
+          status: "COMPLETED",
+          medicalResult: result,
+        })
+      ).unwrap();
+      setMedicalResultModalOpen(false);
+      setDetailModalOpen(false);
+      dispatch(fetchAppointments());
+    } catch (err) {
+      throw err;
+    }
+  };
+
   const dateCellRender = (value: Dayjs) => {
     const dateStr = value.format("YYYY-MM-DD");
-    const items = list.filter(
+    const items = filteredAppointments.filter(
       (a) => a.appointmentDate && a.appointmentDate.startsWith(dateStr)
     );
 
@@ -77,11 +113,11 @@ const DoctorAppointments: React.FC = () => {
           <li key={item.id} style={{ marginBottom: 4 }}>
             <Badge
               status={
-                item.status === "pending"
+                item.status === "SCHEDULED" || item.status === "pending"
                   ? "warning"
-                  : item.status === "confirmed"
+                  : item.status === "CONFIRMED" || item.status === "confirmed"
                   ? "success"
-                  : item.status === "completed"
+                  : item.status === "COMPLETED" || item.status === "completed"
                   ? "default"
                   : "error"
               }
@@ -101,9 +137,19 @@ const DoctorAppointments: React.FC = () => {
     );
   };
 
+  // Filter appointments by status
+  const filteredAppointments = list.filter((a) => {
+    if (filterStatus === 'all') return true;
+    // Support both new and legacy status values
+    const normalizedStatus = a.status.toUpperCase();
+    return normalizedStatus === filterStatus || 
+           (filterStatus === 'SCHEDULED' && normalizedStatus === 'PENDING') ||
+           (filterStatus === 'CONFIRMED' && normalizedStatus === 'CONFIRMED');
+  });
+
   // Get appointments for selected date
   const selectedDateStr = selectedDate.format("YYYY-MM-DD");
-  const appointmentsOnSelectedDate = list
+  const appointmentsOnSelectedDate = filteredAppointments
     .filter((a) => {
       const aptDate = a.time || a.appointmentDate || "";
       return aptDate.startsWith(selectedDateStr);
@@ -117,7 +163,6 @@ const DoctorAppointments: React.FC = () => {
   // Statistics
   const pendingCount = list.filter((a) => a.status === "SCHEDULED" || a.status === "pending").length;
   const confirmedCount = list.filter((a) => a.status === "CONFIRMED" || a.status === "confirmed").length;
-  const completedCount = list.filter((a) => a.status === "COMPLETED" || a.status === "completed").length;
 
   const getStatusTag = (status: IAppointment["status"]) => {
     const statusConfig: Record<string, { color: string; text: string }> = {
@@ -164,7 +209,15 @@ const DoctorAppointments: React.FC = () => {
       {/* Statistics */}
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={8}>
-          <Card>
+          <Card
+            hoverable
+            onClick={() => setFilterStatus('SCHEDULED')}
+            style={{
+              cursor: 'pointer',
+              borderColor: filterStatus === 'SCHEDULED' ? '#faad14' : undefined,
+              borderWidth: filterStatus === 'SCHEDULED' ? 2 : 1,
+            }}
+          >
             <Statistic
               title="Chờ xác nhận"
               value={pendingCount}
@@ -174,7 +227,15 @@ const DoctorAppointments: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card>
+          <Card
+            hoverable
+            onClick={() => setFilterStatus('CONFIRMED')}
+            style={{
+              cursor: 'pointer',
+              borderColor: filterStatus === 'CONFIRMED' ? '#52c41a' : undefined,
+              borderWidth: filterStatus === 'CONFIRMED' ? 2 : 1,
+            }}
+          >
             <Statistic
               title="Đã xác nhận"
               value={confirmedCount}
@@ -184,11 +245,19 @@ const DoctorAppointments: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card>
+          <Card
+            hoverable
+            onClick={() => setFilterStatus('all')}
+            style={{
+              cursor: 'pointer',
+              borderColor: filterStatus === 'all' ? '#1890ff' : undefined,
+              borderWidth: filterStatus === 'all' ? 2 : 1,
+            }}
+          >
             <Statistic
-              title="Hoàn thành"
-              value={completedCount}
-              prefix={<CheckCircleOutlined />}
+              title="Tất cả"
+              value={list.length}
+              prefix={<CalendarOutlined />}
               valueStyle={{ color: "#1890ff" }}
             />
           </Card>
@@ -199,19 +268,192 @@ const DoctorAppointments: React.FC = () => {
       <Row gutter={16}>
         <Col xs={24} lg={16}>
           <Card variant="borderless">
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Space align="center">
                 <CalendarOutlined style={{ fontSize: 24, color: "#1890ff" }} />
                 <Title level={4} style={{ margin: 0 }}>
                   Lịch khám bệnh
                 </Title>
               </Space>
+              <Segmented
+                value={viewMode}
+                onChange={(value) => setViewMode(value as 'calendar' | 'list')}
+                options={[
+                  { label: 'Lịch', value: 'calendar', icon: <CalendarOutlined /> },
+                  { label: 'Danh sách', value: 'list', icon: <UnorderedListOutlined /> },
+                ]}
+              />
             </div>
-            <Calendar
-              value={selectedDate}
-              onSelect={handleDateSelect}
-              cellRender={dateCellRender}
-            />
+
+            {viewMode === 'calendar' ? (
+              <Calendar
+                value={selectedDate}
+                onSelect={handleDateSelect}
+                cellRender={dateCellRender}
+              />
+            ) : (
+              <List
+                dataSource={filteredAppointments}
+                renderItem={(item) => (
+                  <List.Item
+                    style={{ cursor: "pointer", padding: "16px 0" }}
+                    onClick={() => handleViewAppointment(item)}
+                    actions={[
+                      <Space key="actions" size="small">
+                        {(item.status === 'SCHEDULED' || item.status === 'pending') && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUpdateStatus(item.id, 'CONFIRMED');
+                              }}
+                              style={{
+                                padding: '6px 20px',
+                                border: 'none',
+                                borderRadius: 6,
+                                background: '#52c41a',
+                                color: 'white',
+                                cursor: 'pointer',
+                                fontSize: 14,
+                                fontWeight: 500,
+                                transition: 'all 0.3s',
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.background = '#73d13d'}
+                              onMouseOut={(e) => e.currentTarget.style.background = '#52c41a'}
+                            >
+                              ✅ Xác nhận
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUpdateStatus(item.id, 'CANCELLED');
+                              }}
+                              style={{
+                                padding: '6px 20px',
+                                border: '1px solid #ff4d4f',
+                                borderRadius: 6,
+                                background: 'white',
+                                color: '#ff4d4f',
+                                cursor: 'pointer',
+                                fontSize: 14,
+                                fontWeight: 500,
+                                transition: 'all 0.3s',
+                              }}
+                              onMouseOver={(e) => {
+                                e.currentTarget.style.background = '#ff4d4f';
+                                e.currentTarget.style.color = 'white';
+                              }}
+                              onMouseOut={(e) => {
+                                e.currentTarget.style.background = 'white';
+                                e.currentTarget.style.color = '#ff4d4f';
+                              }}
+                            >
+                              ❌ Hủy
+                            </button>
+                          </>
+                        )}
+                        {(item.status === 'CONFIRMED' || item.status === 'confirmed') && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUpdateStatus(item.id, 'COMPLETED');
+                              }}
+                              style={{
+                                padding: '6px 20px',
+                                border: 'none',
+                                borderRadius: 6,
+                                background: '#1890ff',
+                                color: 'white',
+                                cursor: 'pointer',
+                                fontSize: 14,
+                                fontWeight: 500,
+                                transition: 'all 0.3s',
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.background = '#40a9ff'}
+                              onMouseOut={(e) => e.currentTarget.style.background = '#1890ff'}
+                            >
+                              ✔️ Hoàn thành
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUpdateStatus(item.id, 'CANCELLED');
+                              }}
+                              style={{
+                                padding: '6px 20px',
+                                border: '1px solid #ff4d4f',
+                                borderRadius: 6,
+                                background: 'white',
+                                color: '#ff4d4f',
+                                cursor: 'pointer',
+                                fontSize: 14,
+                                fontWeight: 500,
+                                transition: 'all 0.3s',
+                              }}
+                              onMouseOver={(e) => {
+                                e.currentTarget.style.background = '#ff4d4f';
+                                e.currentTarget.style.color = 'white';
+                              }}
+                              onMouseOut={(e) => {
+                                e.currentTarget.style.background = 'white';
+                                e.currentTarget.style.color = '#ff4d4f';
+                              }}
+                            >
+                              ❌ Hủy
+                            </button>
+                          </>
+                        )}
+                      </Space>,
+                    ]}
+                  >
+                    <List.Item.Meta
+                      avatar={
+                        <div
+                          style={{
+                            width: 60,
+                            height: 60,
+                            borderRadius: 8,
+                            background: "#f0f5ff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Text strong style={{ color: "#1890ff", fontSize: 16 }}>
+                            {dayjs(item.appointmentDate).format("HH:mm")}
+                          </Text>
+                        </div>
+                      }
+                      title={
+                        <Space>
+                          <CalendarOutlined />
+                          <Text strong>{dayjs(item.appointmentDate).format("DD/MM/YYYY")}</Text>
+                          <UserOutlined />
+                          <Text strong>{item.patientName}</Text>
+                        </Space>
+                      }
+                      description={
+                        <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                          <Space size="small">
+                            <EnvironmentOutlined style={{ fontSize: 12 }} />
+                            <Text type="secondary" style={{ fontSize: 13 }}>
+                              {item.location || 'Phòng khám'}
+                            </Text>
+                          </Space>
+                          {item.note && (
+                            <Text type="secondary" ellipsis style={{ fontSize: 13 }}>
+                              📝 {item.note}
+                            </Text>
+                          )}
+                          <div style={{ marginTop: 4 }}>{getStatusTag(item.status)}</div>
+                        </Space>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            )}
           </Card>
         </Col>
 
@@ -303,6 +545,14 @@ const DoctorAppointments: React.FC = () => {
           />
         )}
       </Modal>
+
+      {/* Medical Result Modal */}
+      <MedicalResultModal
+        open={medicalResultModalOpen}
+        appointment={selectedAppointment}
+        onCancel={() => setMedicalResultModalOpen(false)}
+        onSubmit={handleSubmitMedicalResult}
+      />
     </div>
   );
 };

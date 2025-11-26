@@ -6,7 +6,135 @@ interface IState {
   list: IAppointment[];
   loading: boolean;
 }
-const initialState: IState = { list: [], loading: false };
+
+// Mock data for testing
+const mockAppointments: IAppointment[] = [
+  {
+    id: 1,
+    doctorId: 1,
+    doctorName: "BS. Nguyễn Văn A",
+    patientId: 1,
+    patientName: "Trần Thị B",
+    appointmentDate: "2025-11-28T09:00:00",
+    time: "2025-11-28T09:00:00",
+    location: "Phòng khám Nội - Tầng 2",
+    status: "SCHEDULED",
+    note: "Đau đầu kéo dài 3 ngày, chóng mặt khi đứng dậy. Có tiền sử huyết áp cao.",
+    doctor: {
+      id: 1,
+      fullName: "BS. Nguyễn Văn A",
+      expertise: "Nội tổng quát",
+    },
+    member: {
+      id: 1,
+      fullName: "Trần Thị B",
+      relation: "Bản thân",
+      bhyt: "DN123456789",
+    },
+    createdAt: "2025-11-27T14:30:00",
+  },
+  {
+    id: 2,
+    doctorId: 1,
+    doctorName: "BS. Nguyễn Văn A",
+    patientId: 2,
+    patientName: "Lê Văn C",
+    appointmentDate: "2025-11-28T10:00:00",
+    time: "2025-11-28T10:00:00",
+    location: "Phòng khám Nội - Tầng 2",
+    status: "SCHEDULED",
+    note: "Khám tổng quát định kỳ",
+    doctor: {
+      id: 1,
+      fullName: "BS. Nguyễn Văn A",
+      expertise: "Nội tổng quát",
+    },
+    member: {
+      id: 2,
+      fullName: "Lê Văn C",
+      relation: "Con",
+      bhyt: "DN987654321",
+    },
+    createdAt: "2025-11-27T15:00:00",
+  },
+  {
+    id: 3,
+    doctorId: 1,
+    doctorName: "BS. Nguyễn Văn A",
+    patientId: 3,
+    patientName: "Phạm Thị D",
+    appointmentDate: "2025-11-28T14:00:00",
+    time: "2025-11-28T14:00:00",
+    location: "Phòng khám Nội - Tầng 2",
+    status: "CONFIRMED",
+    note: "Tái khám sau điều trị viêm dạ dày",
+    doctor: {
+      id: 1,
+      fullName: "BS. Nguyễn Văn A",
+      expertise: "Nội tổng quát",
+    },
+    member: {
+      id: 3,
+      fullName: "Phạm Thị D",
+      relation: "Vợ/Chồng",
+      bhyt: "HN456789123",
+    },
+    createdAt: "2025-11-26T10:00:00",
+  },
+  {
+    id: 4,
+    doctorId: 1,
+    doctorName: "BS. Nguyễn Văn A",
+    patientId: 4,
+    patientName: "Hoàng Văn E",
+    appointmentDate: "2025-11-29T09:30:00",
+    time: "2025-11-29T09:30:00",
+    location: "Phòng khám Nội - Tầng 2",
+    status: "SCHEDULED",
+    note: "Ho kéo dài 2 tuần, sốt nhẹ",
+    doctor: {
+      id: 1,
+      fullName: "BS. Nguyễn Văn A",
+      expertise: "Nội tổng quát",
+    },
+    member: {
+      id: 4,
+      fullName: "Hoàng Văn E",
+      relation: "Cha/Mẹ",
+      bhyt: "SG789123456",
+    },
+    createdAt: "2025-11-27T16:45:00",
+  },
+  {
+    id: 5,
+    doctorId: 1,
+    doctorName: "BS. Nguyễn Văn A",
+    patientId: 5,
+    patientName: "Vũ Thị F",
+    appointmentDate: "2025-11-27T15:00:00",
+    time: "2025-11-27T15:00:00",
+    location: "Phòng khám Nội - Tầng 2",
+    status: "COMPLETED",
+    note: "Khám sức khỏe tổng quát",
+    doctor: {
+      id: 1,
+      fullName: "BS. Nguyễn Văn A",
+      expertise: "Nội tổng quát",
+    },
+    member: {
+      id: 5,
+      fullName: "Vũ Thị F",
+      relation: "Bản thân",
+      bhyt: "HCM321654987",
+    },
+    createdAt: "2025-11-25T09:00:00",
+  },
+];
+
+const initialState: IState = { 
+  list: mockAppointments, // Use mock data initially
+  loading: false 
+};
 
 export const fetchAppointments = createAsyncThunk(
   "appointment/fetch",
@@ -16,10 +144,12 @@ export const fetchAppointments = createAsyncThunk(
       if (response.code === 200) {
         return response.data.result;
       }
-      return [];
+      // Return mock data if API fails or returns empty
+      return mockAppointments;
     } catch (error) {
       console.error("Error fetching appointments:", error);
-      return [];
+      // Return mock data on error
+      return mockAppointments;
     }
   }
 );
