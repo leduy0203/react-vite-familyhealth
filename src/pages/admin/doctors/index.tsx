@@ -17,6 +17,7 @@ import {
   HomeOutlined,
   MedicineBoxOutlined,
   ControlOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -259,6 +260,14 @@ const AdminDoctorsPage: React.FC = () => {
               onClick={() => setIsModalOpen(true)}
             >
               Thêm bác sĩ
+            </Button>
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              onClick={() => message.success('Chức năng xuất Excel đang được phát triển')}
+              style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+            >
+              Xuất Excel
             </Button>
           </Space>
         </div>

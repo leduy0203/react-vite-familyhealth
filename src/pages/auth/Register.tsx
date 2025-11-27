@@ -30,8 +30,15 @@ const Register: React.FC = () => {
       };
 
       await axiosInstance.post("/users/register", payload);
-      message.success("Đăng ký thành công! Vui lòng đăng nhập.");
-      navigate("/login");
+      message.success({
+        content: "🎉 Đăng ký thành công! Chuyển đến trang đăng nhập...",
+        duration: 2,
+      });
+      
+      // Delay để user thấy message trước khi chuyển trang
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
     } catch (err: any) {
           let errorMsg = "Đăng ký thất bại";
           if (err?.response?.data?.message) {

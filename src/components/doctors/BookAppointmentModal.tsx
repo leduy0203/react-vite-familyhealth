@@ -183,7 +183,10 @@ const BookAppointmentModal: React.FC<BookAppointmentModalProps> = ({
       try {
         const response = await appointmentService.create(appointmentData);
         if (response.code === 201) {
-          message.success("Đặt lịch khám thành công!");
+          message.success({
+            content: "🎉 Đặt lịch khám thành công! Vui lòng đến đúng giờ hẹn.",
+            duration: 3,
+          });
           form.resetFields();
           setSelectedDate(null);
           setSelectedSlot(null);

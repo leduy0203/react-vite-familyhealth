@@ -1,59 +1,28 @@
-import React, { useState } from "react";
-import { Table, Button, Space, Tag, Card, Input, Select, Row, Col } from "antd";
+import React, { useState, useEffect } from "react";
+import { Table, Button, Space, Tag, Card, Input, Select, Row, Col, message } from "antd";
 import { SearchOutlined, EyeOutlined, UserOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
 
-// Fake data: danh sách bệnh nhân đã từng khám với bác sĩ
-const mockPatients = [
-  {
-    id: 1,
-    fullname: "Nguyễn Văn A",
-    id_card: "001234567890",
-    address: "123 Lê Lợi, Q.1, TP.HCM",
-    gender: "MALE",
-    date_of_birth: "1990-01-01",
-    email: "nguyenvana@gmail.com",
-    bhyt: "123456789012",
-    relation: "CHU_HO",
-    numAppointments: 5,
-  },
-  {
-    id: 2,
-    fullname: "Trần Thị B",
-    id_card: "009876543210",
-    address: "456 Nguyễn Trãi, Q.5, TP.HCM",
-    gender: "FEMALE",
-    date_of_birth: "1985-05-12",
-    email: "tranthib@gmail.com",
-    bhyt: "098765432109",
-    relation: "VO",
-    numAppointments: 3,
-  },
-  {
-    id: 3,
-    fullname: "Lê Minh C",
-    id_card: "001122334455",
-    address: "789 Võ Văn Tần, Q.3, TP.HCM",
-    gender: "MALE",
-    date_of_birth: "2000-08-20",
-    email: "leminhc@gmail.com",
-    bhyt: "",
-    relation: "CON",
-    numAppointments: 2,
-  },
-  {
-    id: 4,
-    fullname: "Phạm Thị D",
-    id_card: "005544332211",
-    address: "321 Hai Bà Trưng, Q.1, TP.HCM",
-    gender: "FEMALE",
-    date_of_birth: "1995-03-15",
-    email: "phamthid@gmail.com",
-    bhyt: "112233445566",
-    relation: "CHU_HO",
-    numAppointments: 8,
-  },
-];
+interface Patient {
+  id: number;
+  fullname: string;
+  idCard: string;
+  address: string;
+  gender: "MALE" | "FEMALE" | "OTHER";
+  dateOfBirth: string;
+  email: string | null;
+  relation: string;
+  bhyt: string;
+  household: {
+    id: number;
+    househeadId: number;
+    address: string;
+    quantity: number;
+    isActive: boolean;
+  };
+  memberStatus: string;
+}
 
 const genderMap: Record<string, string> = {
   MALE: "Nam",
@@ -66,15 +35,52 @@ const relationMap: Record<string, string> = {
   VO: "Vợ",
   CHONG: "Chồng",
   CON: "Con",
+  BO: "Bố",
+  ME: "Mẹ",
 };
 
 const DoctorPatientsList: React.FC = () => {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
   const [genderFilter, setGenderFilter] = useState<string | undefined>(undefined);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredData = mockPatients.filter((p) => {
-    const matchSearch = p.fullname.toLowerCase().includes(searchText.toLowerCase()) || p.id_card.includes(searchText);
+  useEffect(() => {
+    loadPatients();
+  }, []);
+
+  const loadPatients = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:8080/familyhealth/api/v1/doctors/doctor-patients', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load patients');
+      }
+
+      const data = await response.json();
+      
+      if (data.code === 200 && data.data) {
+        setPatients(data.data);
+      } else {
+        throw new Error(data.message || 'Failed to load patients');
+      }
+    } catch (error) {
+      console.error('Error loading patients:', error);
+      message.error('Không thể tải danh sách bệnh nhân');
+      setPatients([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredData = patients.filter((p) => {
+    const matchSearch = p.fullname.toLowerCase().includes(searchText.toLowerCase()) || p.idCard.includes(searchText);
     const matchGender = !genderFilter || p.gender === genderFilter;
     return matchSearch && matchGender;
   });
@@ -91,31 +97,62 @@ const DoctorPatientsList: React.FC = () => {
         </Space>
       ),
     },
-    { title: "CCCD", dataIndex: "id_card", key: "id_card" },
-    { title: "Ngày sinh", dataIndex: "date_of_birth", key: "date_of_birth" },
+    { 
+      title: "CCCD", 
+      dataIndex: "idCard", 
+      key: "idCard" 
+    },
+    { 
+      title: "Ngày sinh", 
+      dataIndex: "dateOfBirth", 
+      key: "dateOfBirth",
+      render: (date: string) => dayjs(date).format('DD/MM/YYYY')
+    },
     {
       title: "Giới tính",
       dataIndex: "gender",
       key: "gender",
-      render: (g: string) => <Tag color={g === "MALE" ? "blue" : "pink"}>{genderMap[g]}</Tag>,
+      render: (g: string) => <Tag color={g === "MALE" ? "blue" : "pink"}>{genderMap[g] || g}</Tag>,
     },
-    { title: "Địa chỉ", dataIndex: "address", key: "address", ellipsis: true },
-    { title: "BHYT", dataIndex: "bhyt", key: "bhyt", render: (v: string) => v || <Tag>Chưa có</Tag> },
-    { title: "Quan hệ", dataIndex: "relation", key: "relation", render: (r: string) => <Tag color="green">{relationMap[r]}</Tag> },
+    { 
+      title: "Địa chỉ", 
+      dataIndex: "address", 
+      key: "address", 
+      ellipsis: true 
+    },
+    { 
+      title: "BHYT", 
+      dataIndex: "bhyt", 
+      key: "bhyt", 
+      render: (v: string) => v || <Tag color="orange">Chưa có</Tag> 
+    },
+    { 
+      title: "Quan hệ", 
+      dataIndex: "relation", 
+      key: "relation", 
+      render: (r: string) => <Tag color="green">{relationMap[r] || r}</Tag> 
+    },
     {
-      title: "Số lần khám",
-      dataIndex: "numAppointments",
-      key: "numAppointments",
-      render: (n: number) => <Tag color="purple">{n} lần</Tag>,
-      sorter: (a: any, b: any) => a.numAppointments - b.numAppointments,
+      title: "Trạng thái",
+      dataIndex: "memberStatus",
+      key: "memberStatus",
+      render: (status: string) => (
+        <Tag color={status === "ACTIVE" ? "green" : "red"}>
+          {status === "ACTIVE" ? "Hoạt động" : "Không hoạt động"}
+        </Tag>
+      ),
     },
     {
       title: "Thao tác",
       key: "action",
       fixed: "right" as const,
       width: 150,
-      render: (_: any, record: any) => (
-        <Button type="primary" icon={<EyeOutlined />} onClick={() => navigate(`/doctor/patient-history/${record.id}`)}>
+      render: (_: any, record: Patient) => (
+        <Button 
+          type="primary" 
+          icon={<EyeOutlined />} 
+          onClick={() => navigate(`/doctor/patient-history/${record.id}`)}
+        >
           Xem lịch sử
         </Button>
       ),
@@ -164,6 +201,7 @@ const DoctorPatientsList: React.FC = () => {
           rowKey="id"
           columns={columns}
           dataSource={filteredData}
+          loading={loading}
           bordered
           pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `Tổng ${total} bệnh nhân` }}
           scroll={{ x: 1200 }}

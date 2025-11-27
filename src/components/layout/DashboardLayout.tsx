@@ -45,6 +45,7 @@ const DashboardLayout: React.FC = () => {
     if (p.startsWith("/doctors")) return ["5"];
     if (p.startsWith("/history")) return ["8"];
     if (p.startsWith("/medical-records")) return ["13"];
+    if (p.startsWith("/admin/households")) return ["14"];
     return ["1"];
   }, [location.pathname]);
 
@@ -142,6 +143,15 @@ const DashboardLayout: React.FC = () => {
                           Link,
                           { to: "/admin/doctors" },
                           "Quản lý bác sĩ"
+                        ),
+                      },
+                      {
+                        key: "14",
+                        icon: React.createElement(HomeOutlined),
+                        label: React.createElement(
+                          Link,
+                          { to: "/admin/households" },
+                          "Hộ gia đình"
                         ),
                       },
                     ],

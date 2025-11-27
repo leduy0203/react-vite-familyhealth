@@ -1,75 +1,132 @@
-import React from "react";
-import { Card, Timeline, Tag, Button, Row, Col, Descriptions, Space, Divider } from "antd";
+import React, { useEffect, useState } from "react";
+import { Card, Timeline, Tag, Button, Row, Col, Descriptions, Space, Divider, Spin, message } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import { ClockCircleOutlined, UserOutlined, ArrowLeftOutlined, FileTextOutlined, DollarOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
 
-// Fake data: thông tin bệnh nhân
-const mockPatient = {
-  id: 1,
-  fullname: "Nguyễn Văn A",
-  id_card: "001234567890",
-  address: "123 Lê Lợi, Q.1, TP.HCM",
-  gender: "MALE",
-  date_of_birth: "1990-01-01",
-  email: "nguyenvana@gmail.com",
-  bhyt: "123456789012",
-  relation: "CHU_HO",
-};
+interface MedicalResult {
+  id: number;
+  name: string;
+  diagnose: string;
+  note: string;
+  totalMoney: number;
+  createdAt: string;
+  appointmentTime: string;
+  doctorName: string;
+}
 
-// Fake data: lịch sử khám bệnh của 1 bệnh nhân
-const mockHistory = [
-  {
-    id: 1,
-    appointment_date: "2025-11-01 09:00",
-    location: "Phòng khám Tim mạch - Tầng 2",
-    status: "COMPLETED",
-    diagnose: "Cảm cúm, viêm họng nhẹ",
-    note: "Khám lần đầu, kê thuốc hạ sốt và kháng sinh. Tái khám sau 5 ngày.",
-    total_money: 200000,
-    result_name: "Kết quả khám tổng quát lần 1",
-  },
-  {
-    id: 2,
-    appointment_date: "2025-11-15 10:30",
-    location: "Phòng khám Tim mạch - Tầng 2",
-    status: "COMPLETED",
-    diagnose: "Viêm họng mạn tính",
-    note: "Tái khám, kê thêm kháng sinh và thuốc xịt họng. Theo dõi thêm 1 tuần.",
-    total_money: 350000,
-    result_name: "Kết quả tái khám lần 2",
-  },
-  {
-    id: 3,
-    appointment_date: "2025-11-22 14:00",
-    location: "Phòng khám Tim mạch - Tầng 2",
-    status: "COMPLETED",
-    diagnose: "Đã khỏi viêm họng, sức khỏe tốt",
-    note: "Kiểm tra lại, bệnh nhân đã khỏi hoàn toàn. Tư vấn chế độ ăn uống.",
-    total_money: 150000,
-    result_name: "Kết quả tái khám cuối",
-  },
-];
+interface PatientData {
+  id: number;
+  fullname: string;
+  idCard: string;
+  gender: "MALE" | "FEMALE" | "OTHER";
+  dateOfBirth: string;
+  email: string | null;
+  bhyt: string;
+  medicalResults: MedicalResult[];
+}
 
 const genderMap: Record<string, string> = { MALE: "Nam", FEMALE: "Nữ", OTHER: "Khác" };
-const relationMap: Record<string, string> = { CHU_HO: "Chủ hộ", VO: "Vợ", CHONG: "Chồng", CON: "Con" };
-const statusMap: Record<string, { text: string; color: string }> = {
-  SCHEDULED: { text: "Đã đặt", color: "blue" },
-  COMPLETED: { text: "Hoàn thành", color: "green" },
-  CANCELLED: { text: "Đã hủy", color: "red" },
-};
 
 const DoctorPatientHistory: React.FC = () => {
   const { memberId } = useParams();
   const navigate = useNavigate();
+  const [patientData, setPatientData] = useState<PatientData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Log memberId for debugging (can be used to fetch patient data from API)
-  console.log("Patient ID:", memberId);
+  useEffect(() => {
+    if (memberId) {
+      loadPatientHistory();
+    }
+  }, [memberId]);
+
+  const loadPatientHistory = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `http://localhost:8080/familyhealth/api/v1/members/members-medicalRecord/${memberId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to load patient history');
+      }
+
+      const data = await response.json();
+      
+      if (data.code === 200 && data.data) {
+        setPatientData(data.data);
+      } else {
+        throw new Error(data.message || 'Failed to load patient history');
+      }
+    } catch (error) {
+      console.error('Error loading patient history:', error);
+      message.error('Không thể tải lịch sử bệnh án');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '100px 0' }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (!patientData) {
+    return (
+      <div>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/doctor/patients")} style={{ marginBottom: 16 }}>
+          Quay lại danh sách
+        </Button>
+        <Card>
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            Không tìm thấy thông tin bệnh nhân
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  const totalMoney = patientData.medicalResults.reduce((sum, item) => sum + item.totalMoney, 0);
+  const totalVisits = patientData.medicalResults.length;
 
   return (
     <div>
       <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/doctor/patients")} style={{ marginBottom: 16 }}>
         Quay lại danh sách
       </Button>
+
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col span={12}>
+          <Card>
+            <div style={{ textAlign: 'center' }}>
+              <FileTextOutlined style={{ fontSize: 32, color: '#1890ff' }} />
+              <div style={{ marginTop: 8, fontSize: 24, fontWeight: 'bold' }}>
+                {totalVisits}
+              </div>
+              <div style={{ color: '#8c8c8c' }}>Tổng số lần khám</div>
+            </div>
+          </Card>
+        </Col>
+        <Col span={12}>
+          <Card>
+            <div style={{ textAlign: 'center' }}>
+              <DollarOutlined style={{ fontSize: 32, color: '#52c41a' }} />
+              <div style={{ marginTop: 8, fontSize: 24, fontWeight: 'bold' }}>
+                {totalMoney.toLocaleString()}
+              </div>
+              <div style={{ color: '#8c8c8c' }}>Tổng chi phí (VND)</div>
+            </div>
+          </Card>
+        </Col>
+      </Row>
 
       <Card
         title={
@@ -81,21 +138,21 @@ const DoctorPatientHistory: React.FC = () => {
         style={{ marginBottom: 24 }}
       >
         <Descriptions bordered column={{ xs: 1, sm: 2, md: 3 }}>
-          <Descriptions.Item label="Họ tên">{mockPatient.fullname}</Descriptions.Item>
-          <Descriptions.Item label="CCCD">{mockPatient.id_card}</Descriptions.Item>
-          <Descriptions.Item label="Ngày sinh">{mockPatient.date_of_birth}</Descriptions.Item>
+          <Descriptions.Item label="Họ tên">{patientData.fullname}</Descriptions.Item>
+          <Descriptions.Item label="CCCD">{patientData.idCard}</Descriptions.Item>
+          <Descriptions.Item label="Ngày sinh">
+            {dayjs(patientData.dateOfBirth).format('DD/MM/YYYY')}
+          </Descriptions.Item>
           <Descriptions.Item label="Giới tính">
-            <Tag color={mockPatient.gender === "MALE" ? "blue" : "pink"}>{genderMap[mockPatient.gender]}</Tag>
+            <Tag color={patientData.gender === "MALE" ? "blue" : "pink"}>
+              {genderMap[patientData.gender]}
+            </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Quan hệ">
-            <Tag color="green">{relationMap[mockPatient.relation]}</Tag>
+          <Descriptions.Item label="BHYT">
+            {patientData.bhyt || <Tag>Chưa có</Tag>}
           </Descriptions.Item>
-          <Descriptions.Item label="BHYT">{mockPatient.bhyt || <Tag>Chưa có</Tag>}</Descriptions.Item>
-          <Descriptions.Item label="Email" span={2}>
-            {mockPatient.email}
-          </Descriptions.Item>
-          <Descriptions.Item label="Địa chỉ" span={3}>
-            {mockPatient.address}
+          <Descriptions.Item label="Email">
+            {patientData.email || <Tag>Chưa có</Tag>}
           </Descriptions.Item>
         </Descriptions>
       </Card>
@@ -107,55 +164,60 @@ const DoctorPatientHistory: React.FC = () => {
             Lịch sử khám bệnh
           </Space>
         }
-        extra={<Tag color="blue">{mockHistory.length} lần khám</Tag>}
+        extra={<Tag color="blue">{patientData.medicalResults.length} lần khám</Tag>}
       >
-        <Timeline mode="left">
-          {mockHistory.map((item) => (
-            <Timeline.Item
-              key={item.id}
-              color={statusMap[item.status].color}
-              label={
-                <Space direction="vertical" size={0}>
-                  <strong>{item.appointment_date}</strong>
-                  <Tag color={statusMap[item.status].color}>{statusMap[item.status].text}</Tag>
-                </Space>
-              }
-            >
-              <Card size="small" style={{ marginBottom: 8 }}>
-                <Row gutter={[16, 16]}>
-                  <Col span={24}>
-                    <Space>
-                      <FileTextOutlined style={{ color: "#1890ff" }} />
-                      <strong>Chẩn đoán:</strong> {item.diagnose}
-                    </Space>
-                  </Col>
-                  <Col span={24}>
-                    <strong>Địa điểm:</strong> {item.location}
-                  </Col>
-                  <Col span={24}>
-                    <strong>Ghi chú:</strong> {item.note}
-                  </Col>
-                  <Col span={24}>
-                    <Space>
-                      <DollarOutlined style={{ color: "#52c41a" }} />
-                      <strong>Tổng tiền:</strong>
-                      <Tag color="green">{item.total_money.toLocaleString()} đ</Tag>
-                    </Space>
-                  </Col>
-                  <Col span={24}>
-                    <Divider style={{ margin: "8px 0" }} />
-                    <Space>
-                      <strong>Kết quả:</strong> {item.result_name}
-                      <Button type="link" size="small" onClick={() => alert(`Xem chi tiết: ${item.result_name}`)}>
-                        Xem chi tiết
-                      </Button>
-                    </Space>
-                  </Col>
-                </Row>
-              </Card>
-            </Timeline.Item>
-          ))}
-        </Timeline>
+        {patientData.medicalResults.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: '#8c8c8c' }}>
+            Chưa có lịch sử khám bệnh
+          </div>
+        ) : (
+          <Timeline mode="left">
+            {patientData.medicalResults.map((item) => (
+              <Timeline.Item
+                key={item.id}
+                color="green"
+                label={
+                  <Space direction="vertical" size={0}>
+                    <strong>{dayjs(item.appointmentTime).format('DD/MM/YYYY HH:mm')}</strong>
+                  </Space>
+                }
+              >
+                <Card size="small" style={{ marginBottom: 8 }}>
+                  <Row gutter={[16, 16]}>
+                    <Col span={24}>
+                      <Space>
+                        <UserOutlined style={{ color: "#1890ff" }} />
+                        <strong>Bác sĩ:</strong> {item.doctorName}
+                      </Space>
+                    </Col>
+                    <Col span={24}>
+                      <Space>
+                        <FileTextOutlined style={{ color: "#1890ff" }} />
+                        <strong>Chẩn đoán:</strong> {item.diagnose}
+                      </Space>
+                    </Col>
+                    <Col span={24}>
+                      <strong>Ghi chú:</strong> {item.note}
+                    </Col>
+                    <Col span={24}>
+                      <Space>
+                        <DollarOutlined style={{ color: "#52c41a" }} />
+                        <strong>Tổng tiền:</strong>
+                        <Tag color="green">{item.totalMoney.toLocaleString()} đ</Tag>
+                      </Space>
+                    </Col>
+                    <Col span={24}>
+                      <Divider style={{ margin: "8px 0" }} />
+                      <div style={{ fontSize: 12, color: '#8c8c8c' }}>
+                        <ClockCircleOutlined /> Ngày tạo: {dayjs(item.createdAt).format('DD/MM/YYYY HH:mm:ss')}
+                      </div>
+                    </Col>
+                  </Row>
+                </Card>
+              </Timeline.Item>
+            ))}
+          </Timeline>
+        )}
       </Card>
     </div>
   );

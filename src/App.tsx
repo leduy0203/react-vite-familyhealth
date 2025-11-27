@@ -21,6 +21,7 @@ import UnauthorizedPage from "./pages/unauthorized";
 import AdminDashboard from "./pages/admin/dashboard";
 import AdminUsers from "./pages/admin/users";
 import AdminDoctors from "./pages/admin/doctors";
+import AdminHouseholds from "./pages/admin/households";
 
 function App() {
   return (
@@ -148,6 +149,14 @@ function App() {
             element={
               <PermissionRoute role="ADMIN">
                 <AdminDoctors />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="admin/households"
+            element={
+              <PermissionRoute role="ADMIN">
+                <AdminHouseholds />
               </PermissionRoute>
             }
           />

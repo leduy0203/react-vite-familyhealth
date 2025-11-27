@@ -18,6 +18,7 @@ import {
   PlusOutlined,
   DeleteOutlined,
   SearchOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import { userService, type IUserNew } from "../../../services/userService";
 import UserFormModal from "../../../components/admin/users/UserFormModal";
@@ -252,9 +253,19 @@ const UsersPage: React.FC = () => {
               <Select.Option value="PATIENT">Patient</Select.Option>
             </Select>
           </Space>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            Thêm người dùng
-          </Button>
+          <Space>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+              Thêm người dùng
+            </Button>
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              onClick={() => message.success('Chức năng xuất Excel đang được phát triển')}
+              style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+            >
+              Xuất Excel
+            </Button>
+          </Space>
         </Space>
 
         {/* Table */}
