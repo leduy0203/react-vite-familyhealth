@@ -25,7 +25,7 @@ import {
   UnorderedListOutlined,
 } from "@ant-design/icons";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { fetchAppointments, updateAppointment } from "../../redux/slice/appointmentSlice";
+import { fetchDoctorAppointments, changeAppointmentStatus } from "../../redux/slice/appointmentSlice";
 import AppointmentDetailCard from "../../components/appointments/AppointmentDetailCard";
 import MedicalResultModal from "../../components/appointments/MedicalResultModal";
 import type { IAppointment } from "../../types/health";
@@ -45,8 +45,10 @@ const DoctorAppointments: React.FC = () => {
   const [medicalResultModalOpen, setMedicalResultModalOpen] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchAppointments());
-  }, [dispatch]);
+    // Load appointments based on filter
+    const statusParam = filterStatus === 'all' ? undefined : filterStatus;
+    dispatch(fetchDoctorAppointments(statusParam));
+  }, [dispatch, filterStatus]);
 
   const handleDateSelect = (date: Dayjs) => {
     setSelectedDate(date);
@@ -68,71 +70,80 @@ const DoctorAppointments: React.FC = () => {
       return;
     }
 
+    // Normalize status to uppercase
+    const normalizedStatus = status.toUpperCase() as "SCHEDULED" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
+
     try {
-      await dispatch(updateAppointment({ ...appointment, status })).unwrap();
+      await dispatch(changeAppointmentStatus({ id: Number(id), status: normalizedStatus })).unwrap();
       message.success("Cập nhật trạng thái thành công");
       setDetailModalOpen(false);
-      dispatch(fetchAppointments());
+      // Reload appointments based on current filter
+      const statusParam = filterStatus === 'all' ? undefined : filterStatus;
+      dispatch(fetchDoctorAppointments(statusParam));
     } catch (err) {
       message.error("Cập nhật thất bại");
     }
   };
 
-  const handleSubmitMedicalResult = async (
-    appointmentId: string | number,
-    result: IAppointment["medicalResult"]
-  ) => {
-    const appointment = list.find((a) => a.id === appointmentId);
-    if (!appointment) return;
+  const handleSubmitMedicalResult = async () => {
+    if (!selectedAppointment) return;
 
     try {
+      // Medical result is already saved in the modal, now just update status to COMPLETED
       await dispatch(
-        updateAppointment({
-          ...appointment,
+        changeAppointmentStatus({
+          id: Number(selectedAppointment.id),
           status: "COMPLETED",
-          medicalResult: result,
         })
       ).unwrap();
       setMedicalResultModalOpen(false);
       setDetailModalOpen(false);
-      dispatch(fetchAppointments());
+      // Reload appointments based on current filter
+      const statusParam = filterStatus === 'all' ? undefined : filterStatus;
+      dispatch(fetchDoctorAppointments(statusParam));
     } catch (err) {
+      message.error("Cập nhật trạng thái thất bại");
       throw err;
     }
   };
 
   const dateCellRender = (value: Dayjs) => {
     const dateStr = value.format("YYYY-MM-DD");
-    const items = filteredAppointments.filter(
-      (a) => a.appointmentDate && a.appointmentDate.startsWith(dateStr)
-    );
+    const items = filteredAppointments.filter((a) => {
+      const aptDate = a.time || a.appointmentDate || "";
+      return aptDate.startsWith(dateStr);
+    });
 
     return (
       <ul className="events" style={{ listStyle: "none", padding: 0 }}>
-        {items.map((item) => (
-          <li key={item.id} style={{ marginBottom: 4 }}>
-            <Badge
-              status={
-                item.status === "SCHEDULED" || item.status === "pending"
-                  ? "warning"
-                  : item.status === "CONFIRMED" || item.status === "confirmed"
-                  ? "success"
-                  : item.status === "COMPLETED" || item.status === "completed"
-                  ? "default"
-                  : "error"
-              }
-              text={
-                <Text
-                  ellipsis
-                  style={{ fontSize: 11, cursor: "pointer" }}
-                  onClick={() => handleViewAppointment(item)}
-                >
-                  {dayjs(item.appointmentDate).format("HH:mm")} {item.patientName || ""}
-                </Text>
-              }
-            />
-          </li>
-        ))}
+        {items.map((item) => {
+          const aptTime = item.time || item.appointmentDate || "";
+          const patientName = item.member?.fullName || item.patientName || "";
+          return (
+            <li key={item.id} style={{ marginBottom: 4 }}>
+              <Badge
+                status={
+                  item.status === "SCHEDULED" || item.status === "pending"
+                    ? "warning"
+                    : item.status === "CONFIRMED" || item.status === "confirmed"
+                    ? "success"
+                    : item.status === "COMPLETED" || item.status === "completed"
+                    ? "default"
+                    : "error"
+                }
+                text={
+                  <Text
+                    ellipsis
+                    style={{ fontSize: 11, cursor: "pointer" }}
+                    onClick={() => handleViewAppointment(item)}
+                  >
+                    {aptTime ? dayjs(aptTime).format("HH:mm") : "N/A"} {patientName}
+                  </Text>
+                }
+              />
+            </li>
+          );
+        })}
       </ul>
     );
   };
@@ -421,16 +432,18 @@ const DoctorAppointments: React.FC = () => {
                           }}
                         >
                           <Text strong style={{ color: "#1890ff", fontSize: 16 }}>
-                            {dayjs(item.appointmentDate).format("HH:mm")}
+                            {item.time ? dayjs(item.time).format("HH:mm") : "N/A"}
                           </Text>
                         </div>
                       }
                       title={
                         <Space>
                           <CalendarOutlined />
-                          <Text strong>{dayjs(item.appointmentDate).format("DD/MM/YYYY")}</Text>
+                          <Text strong>
+                            {item.time ? dayjs(item.time).format("DD/MM/YYYY") : "Chưa có"}
+                          </Text>
                           <UserOutlined />
-                          <Text strong>{item.patientName}</Text>
+                          <Text strong>{item.member?.fullName || item.patientName || "N/A"}</Text>
                         </Space>
                       }
                       description={
@@ -438,7 +451,7 @@ const DoctorAppointments: React.FC = () => {
                           <Space size="small">
                             <EnvironmentOutlined style={{ fontSize: 12 }} />
                             <Text type="secondary" style={{ fontSize: 13 }}>
-                              {item.location || 'Phòng khám'}
+                              {item.location || 'Chưa có địa điểm'}
                             </Text>
                           </Space>
                           {item.note && (
@@ -495,14 +508,14 @@ const DoctorAppointments: React.FC = () => {
                           }}
                         >
                           <Text strong style={{ color: "#1890ff", fontSize: 16 }}>
-                            {dayjs(item.appointmentDate).format("HH:mm")}
+                            {item.time ? dayjs(item.time).format("HH:mm") : "N/A"}
                           </Text>
                         </div>
                       }
                       title={
                         <Space>
                           <UserOutlined />
-                          <Text strong>{item.patientName}</Text>
+                          <Text strong>{item.member?.fullName || item.patientName || "N/A"}</Text>
                         </Space>
                       }
                       description={
@@ -510,7 +523,7 @@ const DoctorAppointments: React.FC = () => {
                           <Space size="small">
                             <EnvironmentOutlined style={{ fontSize: 12 }} />
                             <Text type="secondary" ellipsis style={{ fontSize: 12 }}>
-                              {item.location}
+                              {item.location || "Chưa có địa điểm"}
                             </Text>
                           </Space>
                           <div style={{ marginTop: 4 }}>{getStatusTag(item.status)}</div>

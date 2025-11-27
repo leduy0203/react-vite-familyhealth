@@ -1,163 +1,147 @@
-import React, { useState } from "react";
-import { Table, Card, Tag, Space, Select, DatePicker, Row, Col, Button, Statistic } from "antd";
-import { FileTextOutlined, UserOutlined, DollarOutlined, CalendarOutlined } from "@ant-design/icons";
+import React, { useState, useEffect } from "react";
+import { Table, Card, Tag, Space, Select, DatePicker, Row, Col, Button, Statistic, Modal, Descriptions } from "antd";
+import { FileTextOutlined, UserOutlined, DollarOutlined, CalendarOutlined, EyeOutlined } from "@ant-design/icons";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { fetchDoctorAppointments } from "../../redux/slice/appointmentSlice";
+import type { IAppointment } from "../../types/health";
 import dayjs from "dayjs";
 
 const { RangePicker } = DatePicker;
 
-// Fake data: tất cả lịch sử khám của bác sĩ (tất cả bệnh nhân)
-const mockAllHistory = [
-  {
-    id: 1,
-    appointment_date: "2025-11-01 09:00",
-    patient_name: "Nguyễn Văn A",
-    patient_id: 1,
-    location: "Phòng khám Tim mạch - Tầng 2",
-    status: "COMPLETED",
-    diagnose: "Cảm cúm, viêm họng nhẹ",
-    note: "Khám lần đầu, kê thuốc hạ sốt và kháng sinh",
-    total_money: 200000,
-  },
-  {
-    id: 2,
-    appointment_date: "2025-11-01 14:00",
-    patient_name: "Trần Thị B",
-    patient_id: 2,
-    location: "Phòng khám Tim mạch - Tầng 2",
-    status: "COMPLETED",
-    diagnose: "Cao huyết áp",
-    note: "Tái khám định kỳ, điều chỉnh liều thuốc",
-    total_money: 300000,
-  },
-  {
-    id: 3,
-    appointment_date: "2025-11-05 10:00",
-    patient_name: "Lê Minh C",
-    patient_id: 3,
-    location: "Phòng khám Hô hấp - Tầng 3",
-    status: "COMPLETED",
-    diagnose: "Viêm phế quản",
-    note: "Khám lần đầu, kê thuốc giãn phế quản",
-    total_money: 250000,
-  },
-  {
-    id: 4,
-    appointment_date: "2025-11-10 09:30",
-    patient_name: "Phạm Thị D",
-    patient_id: 4,
-    location: "Phòng khám Tim mạch - Tầng 2",
-    status: "COMPLETED",
-    diagnose: "Đau dạ dày",
-    note: "Khám tổng quát, kê thuốc giảm đau và bảo vệ niêm mạc dạ dày",
-    total_money: 180000,
-  },
-  {
-    id: 5,
-    appointment_date: "2025-11-15 11:00",
-    patient_name: "Nguyễn Văn A",
-    patient_id: 1,
-    location: "Phòng khám Tim mạch - Tầng 2",
-    status: "COMPLETED",
-    diagnose: "Viêm họng mạn tính",
-    note: "Tái khám, kê thêm kháng sinh và thuốc xịt họng",
-    total_money: 350000,
-  },
-  {
-    id: 6,
-    appointment_date: "2025-11-20 15:00",
-    patient_name: "Trần Thị B",
-    patient_id: 2,
-    location: "Phòng khám Tim mạch - Tầng 2",
-    status: "SCHEDULED",
-    diagnose: "",
-    note: "Lịch hẹn tái khám",
-    total_money: 0,
-  },
-];
-
 const statusMap: Record<string, { text: string; color: string }> = {
-  SCHEDULED: { text: "Đã đặt", color: "blue" },
+  SCHEDULED: { text: "Chờ xác nhận", color: "blue" },
+  CONFIRMED: { text: "Đã xác nhận", color: "orange" },
   COMPLETED: { text: "Hoàn thành", color: "green" },
   CANCELLED: { text: "Đã hủy", color: "red" },
 };
 
 const DoctorMedicalHistory: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const { list, loading } = useAppSelector((s) => s.appointment);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<IAppointment | null>(null);
 
-  const filteredData = mockAllHistory.filter((item) => {
+  useEffect(() => {
+    // Load COMPLETED appointments
+    dispatch(fetchDoctorAppointments("COMPLETED"));
+  }, [dispatch]);
+
+  // Filter appointments by status and date range
+  const filteredData = list.filter((item) => {
     const matchStatus = !statusFilter || item.status === statusFilter;
+    const aptDate = item.time || item.appointmentDate || "";
     const matchDate =
       !dateRange ||
       !dateRange[0] ||
       !dateRange[1] ||
-      (dayjs(item.appointment_date).isAfter(dateRange[0]) && dayjs(item.appointment_date).isBefore(dateRange[1]));
+      (aptDate && dayjs(aptDate).isAfter(dateRange[0]) && dayjs(aptDate).isBefore(dateRange[1]));
     return matchStatus && matchDate;
   });
 
-  const totalCompleted = mockAllHistory.filter((i) => i.status === "COMPLETED").length;
-  const totalRevenue = mockAllHistory.filter((i) => i.status === "COMPLETED").reduce((sum, i) => sum + i.total_money, 0);
+  const totalCompleted = list.filter((i) => i.status === "COMPLETED").length;
+  const totalRevenue = list
+    .filter((i) => i.status === "COMPLETED")
+    .reduce((sum, i) => sum + (i.medicalResult?.totalMoney || 0), 0);
+
+  const handleViewDetail = (record: IAppointment) => {
+    setSelectedRecord(record);
+    setDetailModalOpen(true);
+  };
 
   const columns = [
     {
       title: "Ngày khám",
-      dataIndex: "appointment_date",
-      key: "appointment_date",
-      render: (text: string) => (
-        <Space>
-          <CalendarOutlined style={{ color: "#1890ff" }} />
-          {text}
-        </Space>
-      ),
-      sorter: (a: any, b: any) => dayjs(a.appointment_date).unix() - dayjs(b.appointment_date).unix(),
+      dataIndex: "time",
+      key: "time",
+      render: (_: any, record: IAppointment) => {
+        const aptDate = record.time || record.appointmentDate || "";
+        return aptDate ? (
+          <Space>
+            <CalendarOutlined style={{ color: "#1890ff" }} />
+            <span>{dayjs(aptDate).format("DD/MM/YYYY HH:mm")}</span>
+          </Space>
+        ) : (
+          <span>Chưa có</span>
+        );
+      },
+      sorter: (a: IAppointment, b: IAppointment) => {
+        const dateA = a.time || a.appointmentDate || "";
+        const dateB = b.time || b.appointmentDate || "";
+        return dayjs(dateA).unix() - dayjs(dateB).unix();
+      },
     },
     {
       title: "Bệnh nhân",
-      dataIndex: "patient_name",
-      key: "patient_name",
-      render: (text: string) => (
+      key: "patient",
+      render: (_: any, record: IAppointment) => (
         <Space>
           <UserOutlined style={{ color: "#52c41a" }} />
-          <strong>{text}</strong>
+          <strong>{record.member?.fullName || record.patientName || "N/A"}</strong>
         </Space>
       ),
     },
-    { title: "Địa điểm", dataIndex: "location", key: "location", ellipsis: true },
+    { 
+      title: "Địa điểm", 
+      dataIndex: "location", 
+      key: "location", 
+      ellipsis: true,
+      render: (text: string) => text || "Chưa có"
+    },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (s: string) => <Tag color={statusMap[s].color}>{statusMap[s].text}</Tag>,
+      render: (s: string) => {
+        const config = statusMap[s] || { color: "default", text: s };
+        return <Tag color={config.color}>{config.text}</Tag>;
+      },
       filters: [
-        { text: "Đã đặt", value: "SCHEDULED" },
+        { text: "Chờ xác nhận", value: "SCHEDULED" },
+        { text: "Đã xác nhận", value: "CONFIRMED" },
         { text: "Hoàn thành", value: "COMPLETED" },
         { text: "Đã hủy", value: "CANCELLED" },
       ],
-      onFilter: (value: any, record: any) => record.status === value,
+      onFilter: (value: any, record: IAppointment) => record.status === value,
     },
-    { title: "Chẩn đoán", dataIndex: "diagnose", key: "diagnose", ellipsis: true },
+    { 
+      title: "Chẩn đoán", 
+      key: "diagnose",
+      ellipsis: true,
+      render: (_: any, record: IAppointment) => (
+        <span>{record.medicalResult?.diagnose || record.medicalResult?.diagnosis || "Chưa có"}</span>
+      )
+    },
     {
       title: "Tổng tiền",
-      dataIndex: "total_money",
       key: "total_money",
-      render: (v: number) =>
-        v > 0 ? (
+      render: (_: any, record: IAppointment) => {
+        const money = record.medicalResult?.totalMoney;
+        return money && money > 0 ? (
           <Tag color="green">
-            <DollarOutlined /> {v.toLocaleString()} đ
+            <DollarOutlined /> {money.toLocaleString()} đ
           </Tag>
         ) : (
-          <Tag>Chưa thanh toán</Tag>
-        ),
-      sorter: (a: any, b: any) => a.total_money - b.total_money,
+          <Tag>Chưa có</Tag>
+        );
+      },
+      sorter: (a: IAppointment, b: IAppointment) => 
+        (a.medicalResult?.totalMoney || 0) - (b.medicalResult?.totalMoney || 0),
     },
     {
       title: "Thao tác",
       key: "action",
       fixed: "right" as const,
       width: 120,
-      render: (_: any, record: any) => (
-        <Button type="link" size="small" onClick={() => alert(`Xem chi tiết lịch khám #${record.id}`)}>
-          Xem chi tiết
+      render: (_: any, record: IAppointment) => (
+        <Button 
+          type="link" 
+          size="small" 
+          icon={<EyeOutlined />}
+          onClick={() => handleViewDetail(record)}
+        >
+          Chi tiết
         </Button>
       ),
     },
@@ -168,7 +152,7 @@ const DoctorMedicalHistory: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} md={6}>
           <Card>
-            <Statistic title="Tổng lịch khám" value={mockAllHistory.length} prefix={<FileTextOutlined />} />
+            <Statistic title="Tổng lịch khám" value={list.length} prefix={<FileTextOutlined />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
@@ -219,7 +203,8 @@ const DoctorMedicalHistory: React.FC = () => {
               onChange={setStatusFilter}
               allowClear
             >
-              <Select.Option value="SCHEDULED">Đã đặt</Select.Option>
+              <Select.Option value="SCHEDULED">Chờ xác nhận</Select.Option>
+              <Select.Option value="CONFIRMED">Đã xác nhận</Select.Option>
               <Select.Option value="COMPLETED">Hoàn thành</Select.Option>
               <Select.Option value="CANCELLED">Đã hủy</Select.Option>
             </Select>
@@ -237,11 +222,98 @@ const DoctorMedicalHistory: React.FC = () => {
           rowKey="id"
           columns={columns}
           dataSource={filteredData}
+          loading={loading}
           bordered
           pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `Tổng ${total} bản ghi` }}
           scroll={{ x: 1200 }}
         />
       </Card>
+
+      {/* Detail Modal */}
+      <Modal
+        open={detailModalOpen}
+        onCancel={() => setDetailModalOpen(false)}
+        footer={null}
+        width={700}
+        title={
+          <Space>
+            <FileTextOutlined style={{ color: "#1890ff" }} />
+            <span>Chi tiết lịch khám</span>
+          </Space>
+        }
+      >
+        {selectedRecord && (
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            {/* Appointment Info */}
+            <Card size="small" title="Thông tin lịch hẹn">
+              <Descriptions column={2} size="small">
+                <Descriptions.Item label="Ngày khám" span={2}>
+                  <Space>
+                    <CalendarOutlined />
+                    {selectedRecord.time
+                      ? dayjs(selectedRecord.time).format("DD/MM/YYYY HH:mm")
+                      : "Chưa có"}
+                  </Space>
+                </Descriptions.Item>
+                <Descriptions.Item label="Bệnh nhân">
+                  {selectedRecord.member?.fullName || selectedRecord.patientName || "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Số BHYT">
+                  {selectedRecord.member?.bhyt || "Không có"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Địa điểm" span={2}>
+                  {selectedRecord.location || "Chưa có"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Lý do khám" span={2}>
+                  {selectedRecord.note || "Không có"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Trạng thái">
+                  {statusMap[selectedRecord.status] ? (
+                    <Tag color={statusMap[selectedRecord.status].color}>
+                      {statusMap[selectedRecord.status].text}
+                    </Tag>
+                  ) : (
+                    <Tag>{selectedRecord.status}</Tag>
+                  )}
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+
+            {/* Medical Result */}
+            {selectedRecord.medicalResult && (
+              <Card 
+                size="small" 
+                title="Kết quả khám bệnh"
+                style={{ background: "#f0f5ff" }}
+              >
+                <Descriptions column={1} size="small">
+                  <Descriptions.Item label="Chẩn đoán">
+                    <strong>
+                      {selectedRecord.medicalResult.diagnose || 
+                       selectedRecord.medicalResult.diagnosis || 
+                       "Chưa có"}
+                    </strong>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Ghi chú của bác sĩ">
+                    {selectedRecord.medicalResult.note || 
+                     selectedRecord.medicalResult.notes || 
+                     "Không có"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Tổng chi phí">
+                    <Tag color="green" style={{ fontSize: 16, padding: "4px 12px" }}>
+                      <DollarOutlined />{" "}
+                      {selectedRecord.medicalResult.totalMoney
+                        ? selectedRecord.medicalResult.totalMoney.toLocaleString()
+                        : "0"}{" "}
+                      đ
+                    </Tag>
+                  </Descriptions.Item>
+                </Descriptions>
+              </Card>
+            )}
+          </Space>
+        )}
+      </Modal>
     </div>
   );
 };

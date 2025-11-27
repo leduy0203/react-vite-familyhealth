@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
   Card,
-  List,
   Space,
   Typography,
   Breadcrumb,
@@ -19,12 +18,11 @@ import {
   MedicineBoxOutlined,
   ClockCircleOutlined,
   UserOutlined,
-  PhoneOutlined,
   FileTextOutlined,
   FormOutlined,
 } from "@ant-design/icons";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { fetchAppointments, updateAppointment } from "../../redux/slice/appointmentSlice";
+import { fetchDoctorAppointments, changeAppointmentStatus } from "../../redux/slice/appointmentSlice";
 import MedicalResultModal from "../../components/appointments/MedicalResultModal";
 import type { IAppointment } from "../../types/health";
 import dayjs from "dayjs";
@@ -39,26 +37,28 @@ const ConfirmedAppointments: React.FC = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<IAppointment | null>(null);
 
   useEffect(() => {
-    dispatch(fetchAppointments());
+    // Load only CONFIRMED appointments
+    dispatch(fetchDoctorAppointments("CONFIRMED"));
   }, [dispatch]);
 
-  // Filter only CONFIRMED appointments
-  const confirmedAppointments = list
-    .filter((a) => a.status === "CONFIRMED" || a.status === "confirmed")
-    .sort((a, b) => {
-      const dateA = a.time || a.appointmentDate || "";
-      const dateB = b.time || b.appointmentDate || "";
-      return dateA > dateB ? 1 : -1;
-    });
+  // All appointments are already CONFIRMED from API
+  // Create a copy before sorting to avoid mutating Redux state
+  const confirmedAppointments = [...list].sort((a, b) => {
+    const dateA = a.time || a.appointmentDate || "";
+    const dateB = b.time || b.appointmentDate || "";
+    return dateA > dateB ? 1 : -1;
+  });
 
+  const todayString = dayjs().format("YYYY-MM-DD");
+  
   const todayAppointments = confirmedAppointments.filter((a) => {
     const aptDate = a.time || a.appointmentDate || "";
-    return aptDate.startsWith(dayjs().format("YYYY-MM-DD"));
+    return aptDate && aptDate.startsWith(todayString);
   });
 
   const upcomingAppointments = confirmedAppointments.filter((a) => {
     const aptDate = a.time || a.appointmentDate || "";
-    return aptDate > dayjs().format("YYYY-MM-DD");
+    return aptDate && aptDate > todayString;
   });
 
   const handleOpenMedicalResult = (appointment: IAppointment) => {
@@ -66,25 +66,22 @@ const ConfirmedAppointments: React.FC = () => {
     setMedicalResultModalOpen(true);
   };
 
-  const handleSubmitMedicalResult = async (
-    appointmentId: string | number,
-    result: IAppointment["medicalResult"]
-  ) => {
-    const appointment = list.find((a) => a.id === appointmentId);
-    if (!appointment) return;
+  const handleSubmitMedicalResult = async () => {
+    if (!selectedAppointment) return;
 
     try {
+      // Medical result is already saved in the modal, now just update status to COMPLETED
       await dispatch(
-        updateAppointment({
-          ...appointment,
+        changeAppointmentStatus({
+          id: Number(selectedAppointment.id),
           status: "COMPLETED",
-          medicalResult: result,
         })
       ).unwrap();
-      message.success("Lưu kết quả khám thành công");
       setMedicalResultModalOpen(false);
-      dispatch(fetchAppointments());
+      // Reload CONFIRMED appointments
+      dispatch(fetchDoctorAppointments("CONFIRMED"));
     } catch (err) {
+      message.error("Cập nhật trạng thái thất bại");
       throw err;
     }
   };
@@ -92,13 +89,14 @@ const ConfirmedAppointments: React.FC = () => {
   const handleCancelAppointment = async (appointment: IAppointment) => {
     try {
       await dispatch(
-        updateAppointment({
-          ...appointment,
+        changeAppointmentStatus({
+          id: Number(appointment.id),
           status: "CANCELLED",
         })
       ).unwrap();
       message.success("Đã hủy lịch hẹn");
-      dispatch(fetchAppointments());
+      // Reload CONFIRMED appointments
+      dispatch(fetchDoctorAppointments("CONFIRMED"));
     } catch (err) {
       message.error("Hủy lịch thất bại");
     }
@@ -106,7 +104,7 @@ const ConfirmedAppointments: React.FC = () => {
 
   const renderAppointmentCard = (apt: IAppointment) => {
     const aptDate = apt.time || apt.appointmentDate || "";
-    const isToday = aptDate.startsWith(dayjs().format("YYYY-MM-DD"));
+    const isToday = aptDate && aptDate.startsWith(dayjs().format("YYYY-MM-DD"));
 
     return (
       <Card
@@ -125,7 +123,7 @@ const ConfirmedAppointments: React.FC = () => {
                   <Avatar size={48} icon={<UserOutlined />} style={{ backgroundColor: "#1890ff" }} />
                   <div>
                     <Title level={5} style={{ margin: 0 }}>
-                      {apt.patientName}
+                      {apt.member?.fullName || apt.patientName || "N/A"}
                     </Title>
                     <Text type="secondary">
                       {apt.member?.relation || "Bệnh nhân"} | BHYT: {apt.member?.bhyt || "Không có"}
@@ -137,9 +135,9 @@ const ConfirmedAppointments: React.FC = () => {
               {/* Appointment Details */}
               <Space wrap>
                 <Tag icon={<ClockCircleOutlined />} color="blue">
-                  {dayjs(aptDate).format("DD/MM/YYYY HH:mm")}
+                  {aptDate ? dayjs(aptDate).format("DD/MM/YYYY HH:mm") : "Chưa có thời gian"}
                 </Tag>
-                <Tag icon={<MedicineBoxOutlined />}>{apt.location}</Tag>
+                <Tag icon={<MedicineBoxOutlined />}>{apt.location || "Chưa có địa điểm"}</Tag>
                 {isToday && (
                   <Tag color="success" style={{ fontWeight: "bold" }}>
                     🔥 Hôm nay

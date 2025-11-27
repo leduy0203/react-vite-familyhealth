@@ -46,7 +46,13 @@ export interface IAppointment {
   };
   // Medical result - Kết quả khám bệnh (khi doctor hoàn thành)
   medicalResult?: {
-    diagnosis: string; // Chẩn đoán
+    id?: number; // ID kết quả khám từ backend
+    name?: string; // Tên bệnh nhân
+    diagnose?: string; // Chẩn đoán (backend field)
+    note?: string; // Ghi chú của bác sĩ (backend field)
+    totalMoney?: number; // Tổng chi phí (backend field)
+    // Legacy fields for backward compatibility
+    diagnosis?: string; // Chẩn đoán (legacy)
     symptoms?: string[]; // Triệu chứng
     treatment?: string; // Hướng điều trị
     prescription?: string; // Đơn thuốc

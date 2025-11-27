@@ -154,6 +154,38 @@ export const fetchAppointments = createAsyncThunk(
   }
 );
 
+export const fetchDoctorAppointments = createAsyncThunk(
+  "appointment/fetchDoctor",
+  async (status?: string) => {
+    try {
+      const response = await appointmentService.getDoctorAppointments(status);
+      if (response.code === 200) {
+        return response.data.result;
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching doctor appointments:", error);
+      return [];
+    }
+  }
+);
+
+export const fetchCompletedAppointments = createAsyncThunk(
+  "appointment/fetchCompleted",
+  async () => {
+    try {
+      const response = await appointmentService.getCompleted();
+      if (response.code === 200) {
+        return response.data.result;
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching completed appointments:", error);
+      return [];
+    }
+  }
+);
+
 export const createAppointment = createAsyncThunk(
   "appointment/create",
   async (payload: any) => {
@@ -193,6 +225,20 @@ export const updateAppointment = createAsyncThunk(
   }
 );
 
+export const changeAppointmentStatus = createAsyncThunk(
+  "appointment/changeStatus",
+  async ({ id, status }: { id: number; status: "SCHEDULED" | "CONFIRMED" | "COMPLETED" | "CANCELLED" }) => {
+    console.log("🔄 changeAppointmentStatus called with:", { id, status });
+    const response = await appointmentService.changeStatus(id, status);
+    console.log("📨 Response:", response);
+    // Accept both 200 and 202 status codes
+    if (response.code === 200 || response.code === 202) {
+      return { id, status };
+    }
+    throw new Error(response.message);
+  }
+);
+
 const slice = createSlice({
   name: "appointment",
   initialState,
@@ -216,6 +262,32 @@ const slice = createSlice({
     });
     b.addCase(updateAppointment.fulfilled, (s, a) => {
       s.list = s.list.map((i) => (i.id === a.payload.id ? a.payload : i));
+    });
+
+    b.addCase(fetchDoctorAppointments.pending, (s) => {
+      s.loading = true;
+    });
+    b.addCase(fetchDoctorAppointments.fulfilled, (s, a) => {
+      s.loading = false;
+      s.list = a.payload;
+    });
+    b.addCase(fetchDoctorAppointments.rejected, (s) => {
+      s.loading = false;
+    });
+
+    b.addCase(fetchCompletedAppointments.pending, (s) => {
+      s.loading = true;
+    });
+    b.addCase(fetchCompletedAppointments.fulfilled, (s, a) => {
+      s.loading = false;
+      s.list = a.payload;
+    });
+    b.addCase(fetchCompletedAppointments.rejected, (s) => {
+      s.loading = false;
+    });
+
+    b.addCase(changeAppointmentStatus.fulfilled, (s, a) => {
+      s.list = s.list.map((i) => (i.id === a.payload.id ? { ...i, status: a.payload.status } : i));
     });
   },
 });

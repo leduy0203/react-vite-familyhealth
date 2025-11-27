@@ -1,8 +1,9 @@
 import React from "react";
-import { Modal, Form, Input, DatePicker, Space, Tag, App } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Modal, Form, Input, InputNumber, Space, App, Spin } from "antd";
+import { UserOutlined } from "@ant-design/icons";
 import type { IAppointment } from "../../types/health";
-import dayjs from "dayjs";
+import { medicalResultService } from "../../services/medicalResultService";
+import { appointmentService } from "../../services/appointmentService";
 
 const { TextArea } = Input;
 
@@ -10,62 +11,63 @@ interface Props {
   open: boolean;
   appointment: IAppointment | null;
   onCancel: () => void;
-  onSubmit: (appointmentId: string | number, result: IAppointment["medicalResult"]) => Promise<void>;
+  onSubmit: () => Promise<void>;
 }
 
 const MedicalResultModal: React.FC<Props> = ({ open, appointment, onCancel, onSubmit }) => {
   const [form] = Form.useForm();
   const { message } = App.useApp();
-  const [symptoms, setSymptoms] = React.useState<string[]>([]);
-  const [labTests, setLabTests] = React.useState<string[]>([]);
-  const [inputSymptom, setInputSymptom] = React.useState("");
-  const [inputLabTest, setInputLabTest] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [appointmentDetail, setAppointmentDetail] = React.useState<IAppointment | null>(null);
 
   React.useEffect(() => {
-    if (open && appointment) {
-      // Pre-fill if already has result
-      if (appointment.medicalResult) {
-        form.setFieldsValue({
-          diagnosis: appointment.medicalResult.diagnosis,
-          treatment: appointment.medicalResult.treatment,
-          prescription: appointment.medicalResult.prescription,
-          notes: appointment.medicalResult.notes,
-          followUpDate: appointment.medicalResult.followUpDate
-            ? dayjs(appointment.medicalResult.followUpDate)
-            : undefined,
-        });
-        setSymptoms(appointment.medicalResult.symptoms || []);
-        setLabTests(appointment.medicalResult.labTests || []);
+    const loadAppointmentDetail = async () => {
+      if (open && appointment) {
+        setLoading(true);
+        try {
+          // Load full appointment details from API
+          const response = await appointmentService.getById(Number(appointment.id));
+          if (response.code === 200 && response.data) {
+            setAppointmentDetail(response.data);
+            // Pre-fill patient name from loaded data
+            form.setFieldsValue({
+              name: response.data.member?.fullName || response.data.patientName || "",
+              diagnose: "",
+              note: "",
+              total_money: 0,
+            });
+          } else {
+            // Fallback to appointment prop if API fails
+            setAppointmentDetail(appointment);
+            form.setFieldsValue({
+              name: appointment.member?.fullName || appointment.patientName || "",
+              diagnose: "",
+              note: "",
+              total_money: 0,
+            });
+          }
+        } catch (error) {
+          console.error("Error loading appointment:", error);
+          // Fallback to appointment prop
+          setAppointmentDetail(appointment);
+          form.setFieldsValue({
+            name: appointment.member?.fullName || appointment.patientName || "",
+            diagnose: "",
+            note: "",
+            total_money: 0,
+          });
+        } finally {
+          setLoading(false);
+        }
       } else {
         form.resetFields();
-        setSymptoms([]);
-        setLabTests([]);
+        setAppointmentDetail(null);
       }
-    }
+    };
+
+    loadAppointmentDetail();
   }, [open, appointment, form]);
-
-  const handleAddSymptom = () => {
-    if (inputSymptom.trim() && !symptoms.includes(inputSymptom.trim())) {
-      setSymptoms([...symptoms, inputSymptom.trim()]);
-      setInputSymptom("");
-    }
-  };
-
-  const handleRemoveSymptom = (symptom: string) => {
-    setSymptoms(symptoms.filter((s) => s !== symptom));
-  };
-
-  const handleAddLabTest = () => {
-    if (inputLabTest.trim() && !labTests.includes(inputLabTest.trim())) {
-      setLabTests([...labTests, inputLabTest.trim()]);
-      setInputLabTest("");
-    }
-  };
-
-  const handleRemoveLabTest = (test: string) => {
-    setLabTests(labTests.filter((t) => t !== test));
-  };
 
   const handleSubmit = async () => {
     if (!appointment) return;
@@ -74,22 +76,27 @@ const MedicalResultModal: React.FC<Props> = ({ open, appointment, onCancel, onSu
       const values = await form.validateFields();
       setSubmitting(true);
 
-      const result: IAppointment["medicalResult"] = {
-        diagnosis: values.diagnosis,
-        symptoms,
-        treatment: values.treatment,
-        prescription: values.prescription,
-        labTests,
-        followUpDate: values.followUpDate ? values.followUpDate.format("YYYY-MM-DD") : undefined,
-        notes: values.notes,
+      const medicalResultData = {
+        name: values.name,
+        diagnose: values.diagnose,
+        note: values.note,
+        total_money: values.total_money,
+        created_at: new Date().toISOString(),
+        appointment_id: Number(appointment.id),
       };
 
-      await onSubmit(appointment.id, result);
-      message.success("Lưu kết quả khám thành công");
-      onCancel();
+      const response = await medicalResultService.create(medicalResultData);
+      
+      if (response.code === 201) {
+        message.success("Lưu kết quả khám bệnh thành công");
+        await onSubmit(); // Call parent to update appointment status to COMPLETED
+        onCancel();
+      } else {
+        message.error("Lưu kết quả khám bệnh thất bại");
+      }
     } catch (error) {
       console.error("Error submitting medical result:", error);
-      message.error("Lưu kết quả thất bại");
+      message.error("Lưu kết quả khám bệnh thất bại");
     } finally {
       setSubmitting(false);
     }
@@ -104,124 +111,98 @@ const MedicalResultModal: React.FC<Props> = ({ open, appointment, onCancel, onSu
       width={800}
       okText="Lưu kết quả"
       cancelText="Hủy"
-      confirmLoading={submitting}
+      confirmLoading={submitting || loading}
     >
-      {appointment && (
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "40px 0" }}>
+          <Spin size="large" />
+          <div style={{ marginTop: 16 }}>Đang tải thông tin bệnh nhân...</div>
+        </div>
+      ) : appointmentDetail && (
         <>
-          <div style={{ marginBottom: 16, padding: 12, background: "#f5f5f5", borderRadius: 8 }}>
-            <Space direction="vertical" size={4}>
-              <div>
-                <strong>Bệnh nhân:</strong> {appointment.patientName}
+          <div style={{ marginBottom: 16, padding: 16, background: "#f0f5ff", borderRadius: 8, border: "1px solid #d6e4ff" }}>
+            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <UserOutlined style={{ fontSize: 16, color: "#1890ff" }} />
+                <span style={{ fontWeight: 600, fontSize: 15 }}>Thông tin bệnh nhân</span>
               </div>
-              <div>
-                <strong>Lý do khám:</strong> {appointment.note || "Không có"}
+              <div style={{ paddingLeft: 24 }}>
+                <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                  <div>
+                    <strong>Họ tên:</strong> {appointmentDetail.member?.fullName || appointmentDetail.patientName || "N/A"}
+                  </div>
+                  <div>
+                    <strong>Quan hệ:</strong> {appointmentDetail.member?.relation || "Chính chủ"}
+                  </div>
+                  <div>
+                    <strong>Số BHYT:</strong> {appointmentDetail.member?.bhyt || "Không có"}
+                  </div>
+                  {appointmentDetail.note && (
+                    <div style={{ 
+                      marginTop: 8, 
+                      padding: 12, 
+                      background: "#fff", 
+                      borderRadius: 6,
+                      border: "1px solid #d9d9d9"
+                    }}>
+                      <div style={{ fontWeight: 600, marginBottom: 4, color: "#1890ff" }}>
+                        Lý do khám:
+                      </div>
+                      <div style={{ color: "#595959" }}>
+                        {appointmentDetail.note}
+                      </div>
+                    </div>
+                  )}
+                </Space>
               </div>
             </Space>
           </div>
 
           <Form form={form} layout="vertical">
             <Form.Item
+              label="Họ và tên bệnh nhân"
+              name="name"
+              rules={[{ required: true, message: "Vui lòng nhập tên bệnh nhân" }]}
+            >
+              <Input placeholder="Tên bệnh nhân" disabled />
+            </Form.Item>
+
+            <Form.Item
               label="Chẩn đoán"
-              name="diagnosis"
+              name="diagnose"
               rules={[{ required: true, message: "Vui lòng nhập chẩn đoán" }]}
             >
-              <TextArea rows={3} placeholder="Nhập chẩn đoán của bác sĩ..." />
-            </Form.Item>
-
-            <Form.Item label="Triệu chứng">
-              <Space direction="vertical" style={{ width: "100%" }}>
-                <Space.Compact style={{ width: "100%" }}>
-                  <Input
-                    placeholder="Nhập triệu chứng và nhấn Enter"
-                    value={inputSymptom}
-                    onChange={(e) => setInputSymptom(e.target.value)}
-                    onPressEnter={handleAddSymptom}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddSymptom}
-                    style={{
-                      padding: "0 16px",
-                      border: "1px solid #d9d9d9",
-                      background: "#fff",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <PlusOutlined />
-                  </button>
-                </Space.Compact>
-                <div>
-                  {symptoms.map((symptom) => (
-                    <Tag
-                      key={symptom}
-                      closable
-                      onClose={() => handleRemoveSymptom(symptom)}
-                      style={{ marginBottom: 8 }}
-                    >
-                      {symptom}
-                    </Tag>
-                  ))}
-                </div>
-              </Space>
-            </Form.Item>
-
-            <Form.Item label="Hướng điều trị" name="treatment">
-              <TextArea rows={3} placeholder="Nhập hướng điều trị..." />
-            </Form.Item>
-
-            <Form.Item label="Đơn thuốc" name="prescription">
-              <TextArea rows={4} placeholder="Nhập đơn thuốc (tên thuốc, liều lượng, cách dùng)..." />
-            </Form.Item>
-
-            <Form.Item label="Xét nghiệm yêu cầu">
-              <Space direction="vertical" style={{ width: "100%" }}>
-                <Space.Compact style={{ width: "100%" }}>
-                  <Input
-                    placeholder="Nhập xét nghiệm và nhấn Enter"
-                    value={inputLabTest}
-                    onChange={(e) => setInputLabTest(e.target.value)}
-                    onPressEnter={handleAddLabTest}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddLabTest}
-                    style={{
-                      padding: "0 16px",
-                      border: "1px solid #d9d9d9",
-                      background: "#fff",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <PlusOutlined />
-                  </button>
-                </Space.Compact>
-                <div>
-                  {labTests.map((test) => (
-                    <Tag
-                      key={test}
-                      closable
-                      onClose={() => handleRemoveLabTest(test)}
-                      color="blue"
-                      style={{ marginBottom: 8 }}
-                    >
-                      {test}
-                    </Tag>
-                  ))}
-                </div>
-              </Space>
-            </Form.Item>
-
-            <Form.Item label="Ngày tái khám" name="followUpDate">
-              <DatePicker
-                style={{ width: "100%" }}
-                format="DD/MM/YYYY"
-                placeholder="Chọn ngày tái khám"
-                disabledDate={(current) => current && current < dayjs().startOf("day")}
+              <TextArea 
+                rows={4} 
+                placeholder="Nhập chẩn đoán chi tiết (triệu chứng, bệnh lý, mã ICD-10 nếu có)..." 
               />
             </Form.Item>
 
-            <Form.Item label="Ghi chú thêm" name="notes">
-              <TextArea rows={2} placeholder="Ghi chú bổ sung..." />
+            <Form.Item
+              label="Ghi chú của bác sĩ"
+              name="note"
+              rules={[{ required: true, message: "Vui lòng nhập ghi chú" }]}
+            >
+              <TextArea 
+                rows={6} 
+                placeholder="Nhập ghi chú chi tiết: tiền sử bệnh, kết quả khám, hướng điều trị, đơn thuốc, xét nghiệm yêu cầu, lưu ý khác..." 
+              />
+            </Form.Item>
+
+            <Form.Item
+              label="Tổng chi phí (VNĐ)"
+              name="total_money"
+              rules={[
+                { required: true, message: "Vui lòng nhập chi phí" },
+                { type: "number", min: 0, message: "Chi phí phải lớn hơn hoặc bằng 0" }
+              ]}
+            >
+              <InputNumber 
+                style={{ width: "100%" }} 
+                placeholder="Nhập tổng chi phí khám bệnh"
+                formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                parser={value => value!.replace(/\$\s?|(,*)/g, '')}
+              />
             </Form.Item>
           </Form>
         </>

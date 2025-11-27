@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { App as AntApp } from "antd";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -75,6 +75,7 @@ function App() {
           />
 
           {/* DOCTOR Routes */}
+          <Route path="doctor" element={<Navigate to="/doctor/appointments" replace />} />
           <Route
             path="doctor/appointments"
             element={

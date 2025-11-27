@@ -195,7 +195,7 @@ const DashboardLayout: React.FC = () => {
                   {
                     key: "1",
                     icon: React.createElement(DashboardOutlined),
-                    label: React.createElement(Link, { to: "/" }, "Dashboard"),
+                    label: React.createElement(Link, { to: "/" }, "Trang chủ"),
                   },
                   {
                     key: "4",
