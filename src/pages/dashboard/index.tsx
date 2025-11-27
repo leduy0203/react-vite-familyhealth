@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { 
   Card, 
-  Breadcrumb, 
   Spin, 
   Row, 
   Col, 
@@ -36,7 +35,19 @@ const DashboardPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { list: appointments, loading } = useAppSelector((s) => s.appointment);
   const [chatbotOpen, setChatbotOpen] = useState(false);
-  const [messages, setMessages] = useState<Array<{ type: 'user' | 'bot', content: string }>>([
+  const [messages, setMessages] = useState<Array<{ 
+    type: 'user' | 'bot', 
+    content: string,
+    doctors?: Array<{
+      doctorId: number;
+      fullname: string;
+      expertise: string;
+      bio: string;
+      matchScore: number;
+    }>,
+    severity?: string,
+    requiresDoctor?: boolean
+  }>>([
     { type: 'bot', content: 'Xin chào! Tôi là trợ lý ảo của Family Health. Tôi có thể giúp gì cho bạn?' }
   ]);
   const [inputMessage, setInputMessage] = useState('');
@@ -77,31 +88,45 @@ const DashboardPage: React.FC = () => {
     setInputMessage('');
     setIsSending(true);
 
-    // Simulate bot response (replace with actual API call)
-    setTimeout(() => {
-      const botResponse = generateBotResponse(userMsg);
-      setMessages(prev => [...prev, { type: 'bot', content: botResponse }]);
-      setIsSending(false);
-    }, 1000);
-  };
+    try {
+      const response = await fetch('http://localhost:8080/familyhealth/api/v1/ai/consult', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
+        },
+        body: JSON.stringify({ symptoms: userMsg })
+      });
 
-  const generateBotResponse = (message: string): string => {
-    const msg = message.toLowerCase();
-    
-    if (msg.includes('đặt lịch') || msg.includes('hẹn')) {
-      return 'Để đặt lịch khám, bạn vui lòng vào mục "Lịch hẹn" và chọn "Đặt lịch mới". Bạn có thể chọn bác sĩ, thời gian và lý do khám.';
-    } else if (msg.includes('kết quả') || msg.includes('khám')) {
-      return 'Bạn có thể xem kết quả khám bệnh tại mục "Lịch sử khám bệnh". Tất cả kết quả đã hoàn thành sẽ được lưu trữ ở đó.';
-    } else if (msg.includes('gia đình')) {
-      return 'Bạn có thể quản lý thành viên gia đình tại mục "Quản lý gia đình". Thêm thành viên để đặt lịch khám cho họ.';
-    } else if (msg.includes('bác sĩ')) {
-      return 'Danh sách bác sĩ có thể xem tại mục "Bác sĩ". Bạn có thể tìm kiếm theo chuyên khoa hoặc tên bác sĩ.';
-    } else if (msg.includes('hủy')) {
-      return 'Để hủy lịch hẹn, vào mục "Lịch hẹn", chọn lịch cần hủy và nhấn nút "Hủy lịch hẹn".';
-    } else {
-      return 'Tôi có thể giúp bạn về: đặt lịch khám, xem kết quả, quản lý gia đình, tìm bác sĩ. Bạn cần hỗ trợ gì?';
+      if (!response.ok) {
+        throw new Error('API call failed');
+      }
+
+      const data = await response.json();
+      
+      if (data.code === 200 && data.data) {
+        setMessages(prev => [...prev, { 
+          type: 'bot', 
+          content: data.data.advice,
+          doctors: data.data.recommendedDoctors || [],
+          severity: data.data.severity,
+          requiresDoctor: data.data.requiresDoctor
+        }]);
+      } else {
+        throw new Error('Invalid response');
+      }
+    } catch (error) {
+      console.error('Chatbot error:', error);
+      setMessages(prev => [...prev, { 
+        type: 'bot', 
+        content: 'Xin lỗi, tôi đang gặp sự cố kết nối. Vui lòng thử lại sau hoặc liên hệ trực tiếp với bác sĩ nếu khẩn cấp.' 
+      }]);
+    } finally {
+      setIsSending(false);
     }
   };
+
+
 
   const getAppointmentsForDate = (date: Dayjs) => {
     return appointments.filter(apt => {
@@ -299,10 +324,10 @@ const DashboardPage: React.FC = () => {
         open={chatbotOpen}
         onCancel={() => setChatbotOpen(false)}
         footer={null}
-        width={500}
+        width={650}
         styles={{ body: { padding: 0 } }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', height: 500 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: 600 }}>
           {/* Messages Area */}
           <div style={{ 
             flex: 1, 
@@ -311,26 +336,110 @@ const DashboardPage: React.FC = () => {
             backgroundColor: '#f5f5f5' 
           }}>
             {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                style={{
-                  display: 'flex',
-                  justifyContent: msg.type === 'user' ? 'flex-end' : 'flex-start',
-                  marginBottom: 12
-                }}
-              >
+              <div key={idx}>
+                {/* Message bubble */}
                 <div
                   style={{
-                    maxWidth: '70%',
-                    padding: '8px 12px',
-                    borderRadius: 8,
-                    backgroundColor: msg.type === 'user' ? '#1890ff' : '#fff',
-                    color: msg.type === 'user' ? '#fff' : '#000',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                    display: 'flex',
+                    justifyContent: msg.type === 'user' ? 'flex-end' : 'flex-start',
+                    marginBottom: 12
                   }}
                 >
-                  {msg.content}
+                  <div
+                    style={{
+                      maxWidth: '70%',
+                      padding: '8px 12px',
+                      borderRadius: 8,
+                      backgroundColor: msg.type === 'user' ? '#1890ff' : '#fff',
+                      color: msg.type === 'user' ? '#fff' : '#000',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                      whiteSpace: 'pre-line'
+                    }}
+                  >
+                    {msg.content}
+                  </div>
                 </div>
+
+                {/* Doctor recommendations */}
+                {msg.doctors && msg.doctors.length > 0 && (
+                  <div style={{ marginBottom: 12, paddingLeft: 8 }}>
+                    <div style={{ 
+                      fontSize: 12, 
+                      color: '#666', 
+                      marginBottom: 8,
+                      fontWeight: 500
+                    }}>
+                      🏥 Bác sĩ được đề xuất:
+                    </div>
+                    {msg.doctors.map(doctor => (
+                      <Card 
+                        key={doctor.doctorId}
+                        size="small"
+                        style={{ 
+                          marginBottom: 8,
+                          transition: 'all 0.3s'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <Avatar 
+                            size={40}
+                            icon={<UserOutlined />} 
+                            style={{ backgroundColor: '#1890ff' }}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                              {doctor.fullname}
+                            </div>
+                            <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>
+                              <Tag color="blue" style={{ margin: 0 }}>
+                                {doctor.expertise}
+                              </Tag>
+                            </div>
+                            <div style={{ fontSize: 11, color: '#999' }}>
+                              Độ phù hợp: {(doctor.matchScore * 100).toFixed(0)}%
+                            </div>
+                          </div>
+                          <Button 
+                            type="primary" 
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.location.href = '/doctors';
+                            }}
+                          >
+                            Xem chi tiết
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                {/* Severity warning */}
+                {msg.severity === 'HIGH' && msg.requiresDoctor && (
+                  <div style={{ 
+                    marginBottom: 12, 
+                    paddingLeft: 8,
+                    padding: 12,
+                    backgroundColor: '#fff2e8',
+                    border: '1px solid #ffbb96',
+                    borderRadius: 8
+                  }}>
+                    <div style={{ 
+                      color: '#d4380d', 
+                      fontWeight: 600,
+                      marginBottom: 4,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4
+                    }}>
+                      ⚠️ Cảnh báo khẩn cấp
+                    </div>
+                    <div style={{ fontSize: 12, color: '#ad4e00' }}>
+                      Triệu chứng của bạn có thể nghiêm trọng. Vui lòng đặt lịch khám ngay hoặc đến cơ sở y tế gần nhất.
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
             {isSending && (

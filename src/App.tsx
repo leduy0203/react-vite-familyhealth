@@ -16,6 +16,7 @@ import DoctorPatientHistory from "./pages/doctor/DoctorPatientHistory";
 import DoctorMedicalHistory from "./pages/doctor/DoctorMedicalHistory";
 import DoctorsPage from "./pages/doctors";
 import MedicalHistoryPage from "./pages/history";
+import MedicalRecordsPage from "./pages/medical-records";
 import UnauthorizedPage from "./pages/unauthorized";
 import AdminDashboard from "./pages/admin/dashboard";
 import AdminUsers from "./pages/admin/users";
@@ -70,6 +71,14 @@ function App() {
             element={
               <PermissionRoute role={["PATIENT", "PATIENT_HOUSEHOLD"]}>
                 <MedicalHistoryPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="medical-records"
+            element={
+              <PermissionRoute role={["PATIENT", "PATIENT_HOUSEHOLD"]}>
+                <MedicalRecordsPage />
               </PermissionRoute>
             }
           />

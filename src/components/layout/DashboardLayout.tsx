@@ -12,6 +12,7 @@ import {
   HistoryOutlined,
   ControlOutlined,
   UsergroupAddOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import { FaStethoscope, FaHeartbeat } from "react-icons/fa";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
@@ -43,6 +44,7 @@ const DashboardLayout: React.FC = () => {
     if (p.startsWith("/family")) return ["4"];
     if (p.startsWith("/doctors")) return ["5"];
     if (p.startsWith("/history")) return ["8"];
+    if (p.startsWith("/medical-records")) return ["13"];
     return ["1"];
   }, [location.pathname]);
 
@@ -231,6 +233,15 @@ const DashboardLayout: React.FC = () => {
                       Link,
                       { to: "/history" },
                       "Kết quả khám"
+                    ),
+                  },
+                  {
+                    key: "13",
+                    icon: React.createElement(FileTextOutlined),
+                    label: React.createElement(
+                      Link,
+                      { to: "/medical-records" },
+                      "Hồ sơ bệnh án"
                     ),
                   },
                 ]
