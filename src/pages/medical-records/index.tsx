@@ -39,7 +39,7 @@ const MedicalRecordsPage: React.FC = () => {
   const [memberAppointments, setMemberAppointments] = useState<IAppointment[]>([]);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
-  const [exportDirectory, setExportDirectory] = useState<string>('C:\\Downloads');
+  const [exportDirectory, setExportDirectory] = useState<string>('D:\\reports');
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
@@ -331,7 +331,7 @@ const MedicalRecordsPage: React.FC = () => {
                 </div>
                 <Space.Compact style={{ width: '100%' }}>
                   <Input
-                    placeholder="Nhập đường dẫn thư mục (ví dụ: C:\\Downloads)"
+                    placeholder="Nhập đường dẫn thư mục (ví dụ: D:\\reports)"
                     value={exportDirectory}
                     onChange={(e) => setExportDirectory(e.target.value)}
                     prefix={<FolderOpenOutlined />}

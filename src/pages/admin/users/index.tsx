@@ -71,6 +71,55 @@ const UsersPage: React.FC = () => {
     }
   };
 
+  const handleExportUsers = async () => {
+    try {
+      setLoading(true);
+      message.info('Đang xuất dữ liệu...');
+      
+      const response = await fetch(
+        'http://localhost:8080/familyhealth/api/v1/batch/export/users',
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Xuất dữ liệu thất bại');
+      }
+
+      // Get filename from Content-Disposition header or use default
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = 'users_export.xlsx';
+      if (contentDisposition) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '');
+        }
+      }
+
+      // Download file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      message.success('Xuất dữ liệu thành công!');
+    } catch (error: any) {
+      console.error('Export error:', error);
+      message.error(error.message || 'Lỗi khi xuất dữ liệu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleFinish = async (values: any) => {
     try {
       const createData: any = {
@@ -260,7 +309,8 @@ const UsersPage: React.FC = () => {
             <Button
               type="primary"
               icon={<DownloadOutlined />}
-              onClick={() => message.success('Chức năng xuất Excel đang được phát triển')}
+              onClick={handleExportUsers}
+              loading={loading}
               style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
             >
               Xuất Excel
